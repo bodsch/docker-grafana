@@ -1,0 +1,6 @@
+#
+
+TYPE="grafana"
+
+TAG_NAME="${USER}-docker-${TYPE}"
+CONTAINER_NAME="${USER}-${TYPE}"

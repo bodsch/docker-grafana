@@ -1,69 +1,55 @@
-
-from debian:jessie
+FROM alpine:3.3
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="0.0.2"
+LABEL version="0.1.0"
 
-ENV DEBIAN_FRONTEND noninteractive
-ENV TERM xterm
+#   80: grafana (nginx)
+# 3000: grafana (plain)
+EXPOSE 80 3000
 
-#   80: graphite: 80
-#   81: grafana
-# 2003: Carbon line receiver port
-# 7002: Carbon cache query port
-# 8125: Statsd UDP port
-# 8126: Statsd Management port
-expose  80 81 8125/udp 8126
+ENV GRAFANA_VERSION=v2.6.0
 
 # ---------------------------------------------------------------------------------------
 
-run \
-  apt-get -qqy update && \
-  apt-get -qqy install --no-install-recommends \
-    apt-transport-https \
-    software-properties-common \
-    curl \
-    sudo && \
-  echo "deb http://us.archive.ubuntu.com/ubuntu/ precise universe"      >> /etc/apt/sources.list && \
-  echo "deb https://packagecloud.io/grafana/stable/debian/ wheezy main" >> /etc/apt/sources.list && \
-  curl https://packagecloud.io/gpg.key | sudo apt-key add - && \
-  apt-get -qqy update && \
-  apt-get -qqy install --no-install-recommends \
-    python-django-tagging python-simplejson python-memcache \
-    python-ldap python-cairo python-django python-twisted   \
-    python-pysqlite2 python-support python-pip gunicorn     \
-    supervisor nginx-light git wget curl \
-    grafana \
-    sqlite3
+RUN \
+#  export GRAFANA_VERSION=v2.6.0 \
+    export GOPATH=/go \
+    && PATH=$PATH:$GOPATH/bin \
+    && apk add --update build-base nodejs go git mercurial sqlite \
+    && mkdir -p /go/src/github.com/grafana && cd /go/src/github.com/grafana \
+    && git clone https://github.com/grafana/grafana.git -b ${GRAFANA_VERSION} \
+    && cd grafana \
+    && go run build.go setup \
+    && godep restore \
+    && go build . \
+    && npm install \
+    && npm install -g grunt-cli \
+    && cd /go/src/github.com/grafana/grafana/node_modules/karma-phantomjs-launcher/node_modules/phantomjs && node install \
+    && cd /go/src/github.com/grafana/grafana && grunt \
+    && npm uninstall -g grunt-cli \
+    && npm cache clear \
+    && mkdir -p /usr/share/grafana/bin/ \
+    && cp -a /go/src/github.com/grafana/grafana/grafana /usr/share/grafana/bin/grafana-server \
+    && cp -ra /go/src/github.com/grafana/grafana/public_gen /usr/share/grafana \
+    && mv /usr/share/grafana/public_gen /usr/share/grafana/public \
+    && cp -ra /go/src/github.com/grafana/grafana/conf /usr/share/grafana \
+    && go clean -i -r \
+    && apk del --purge build-base nodejs go git mercurial \
+    && rm -rf /go /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
 
-run \
-  mkdir /src && \
-  git clone https://github.com/etsy/statsd.git /src/statsd && \
-  cd /usr/local/src && \
-  git clone https://github.com/graphite-project/graphite-web.git && \
-  git clone https://github.com/graphite-project/carbon.git && \
-  git clone https://github.com/graphite-project/whisper.git && \
-  cd /usr/local/src/whisper && \
-  git checkout master && \
-  python setup.py install && \
-  cd /usr/local/src/carbon && \
-  git checkout 0.9.13-pre1 && \
-  python setup.py install && \
-  cd /usr/local/src/graphite-web && \
-  git checkout 0.9.13-pre1 && \
-  python check-dependencies.py && \
-  python setup.py install
+# nachläufiger prozess ..
+#run \
+#  sleep 1s && \
+#  /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana && \
+#  sqlite3 /usr/share/grafana/data/grafana.db "insert into data_source (org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials) values (1,0,'graphite','graphite','proxy','http://localhost',0,1,'{}',DateTime('now'),DateTime('now'),0)"
 
-ADD rootfs/ /
+#ADD rootfs/ /
 
-run \
-  chown -R www-data /opt/graphite/storage && \
-  cd /opt/graphite/webapp/graphite && \
-  python manage.py syncdb --noinput && \
-  timeout 1 /usr/sbin/grafana-server -homepath /usr/share/grafana || true && \
-  sqlite3 /usr/share/grafana/data/grafana.db "insert into data_source (org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials) values (1,0,'graphite','graphite','proxy','http://localhost',0,1,'{}',DateTime('now'),DateTime('now'),0)"
+VOLUME [ "/usr/share/grafana/data" ]
 
-VOLUME [ "/opt/graphite/storage/whisper", "/var/lib/log/supervisor" ]
+WORKDIR [ "/usr/share/grafana" ]
+CMD ["/usr/share/grafana/bin/grafana-server"]
 
-cmd [ "/usr/bin/supervisord" ]
+# CMD [ "/bin/sh" ]
+# CMD     ["/usr/bin/supervisord"]
