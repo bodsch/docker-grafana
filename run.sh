@@ -15,6 +15,7 @@ docker run \
   --tty \
   --detach \
   --publish=80:80 \
+  --publish=3000:3000 \
   --name ${CONTAINER_NAME} \
   ${TAG_NAME}
 
