@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -x
+
 initfile=/opt/run.init
 
 GRAPHITE_HOST=${GRAPHITE_HOST:-localhost}
@@ -23,9 +25,18 @@ then
   then
     exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana & 1> /dev/null
     sleep 5s
-    sqlite3 /usr/share/grafana/data/grafana.db "insert into data_source (org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials) values (1,0,'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0)"
+
+    ps ax | grep grafana | grep -v grep
+
+    sleep 5s
+
+    kill -9 $(ps ax | grep grafana | grep -v grep | awk '{print $1}')
+
+    sqlite3 -batch -bail -stats /usr/share/grafana/data/grafana.db "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
     sleep 2s
-    kill -9 $(ps ax | grep grafana | awk '{print $1}')
+
+    sqlite3 -batch -bail -stats /usr/share/grafana/data/grafana.db ".dump data_source"
+
   fi
 
   touch ${initfile}

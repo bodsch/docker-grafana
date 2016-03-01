@@ -63,6 +63,3 @@ WORKDIR /usr/share/grafana
 
 ENTRYPOINT [ "/opt/startup.sh" ]
 
-# CMD ["/usr/share/grafana/bin/grafana-server"]
-# CMD [ "/bin/sh" ]
-# CMD     ["/usr/bin/supervisord"]
