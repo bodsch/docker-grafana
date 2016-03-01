@@ -23,7 +23,7 @@ then
   then
     exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana & 1> /dev/null
     sleep 5s
-    sqlite3 /usr/share/grafana/data/grafana.db "insert into data_source (org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials) values (1,0,'graphite','graphite','proxy','http://localhost',0,1,'{}',DateTime('now'),DateTime('now'),0)"
+    sqlite3 /usr/share/grafana/data/grafana.db "insert into data_source (org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials) values (1,0,'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0)"
     sleep 2s
     kill -9 $(ps ax | grep grafana | awk '{print $1}')
   fi

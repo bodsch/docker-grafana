@@ -14,8 +14,11 @@ docker run \
   --interactive \
   --tty \
   --detach \
-  --publish=80:80 \
   --publish=3000:3000 \
+  --hostname=${USER}-${TYPE} \
+  --link=${USER}-graphite:graphite \
+  --env GRAPHITE_HOST=graphite \
+  --env GRAPHITE_PORT=8080 \
   --name ${CONTAINER_NAME} \
   ${TAG_NAME}
 
