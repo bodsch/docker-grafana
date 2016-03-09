@@ -6,7 +6,7 @@ LABEL version="0.1.0"
 
 #   80: grafana (nginx)
 # 3000: grafana (plain)
-EXPOSE 80 3000
+EXPOSE 3000
 
 ENV GRAFANA_VERSION=v2.6.0
 ENV GOPATH=/go
@@ -64,5 +64,7 @@ VOLUME [ "/usr/share/grafana/data" ]
 
 WORKDIR /usr/share/grafana
 
-ENTRYPOINT [ "/opt/startup.sh" ]
+CMD [ '/bin/sh' ]
+
+# ENTRYPOINT [ "/opt/startup.sh" ]
 
