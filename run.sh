@@ -17,7 +17,7 @@ docker run \
   --publish=3000:3000 \
   --link=${USER}-graphite:graphite \
   --env GRAPHITE_HOST=${USER}-graphite.docker \
-  --env GRAPHITE_PORT=8080 \
+  --env GRAPHITE_PORT=8088 \
   --dns=172.17.0.1 \
   --hostname=${USER}-${TYPE} \
   --name ${CONTAINER_NAME} \

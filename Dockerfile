@@ -16,9 +16,12 @@ RUN \
   apk add --update \
     build-base \
     nodejs \
+    netcat-openbsd \
     go \
     git \
+    pwgen \
     mercurial \
+    mysql-client \
     sqlite \
     supervisor
 
