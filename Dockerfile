@@ -2,7 +2,7 @@ FROM alpine:3.3
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="0.1.0"
+LABEL version="1.0.0"
 
 #   80: grafana (nginx)
 # 3000: grafana (plain)
@@ -40,6 +40,7 @@ RUN \
 
 RUN \
   mkdir /var/log/supervisor && \
+  mkdir /var/log/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -a $GOPATH/src/github.com/grafana/grafana/grafana /usr/share/grafana/bin/grafana-server && \
   mv $GOPATH/src/github.com/grafana/grafana/public_gen /usr/share/grafana/public && \
@@ -60,11 +61,10 @@ RUN \
 
 ADD rootfs/ /
 
-VOLUME [ "/usr/share/grafana/data" ]
+VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/grafana/dashboards" ]
 
 WORKDIR /usr/share/grafana
 
-CMD [ '/bin/sh' ]
-
-# ENTRYPOINT [ "/opt/startup.sh" ]
+# CMD [ '/bin/sh' ]
+ENTRYPOINT [ "/opt/startup.sh" ]
 
