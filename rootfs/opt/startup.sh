@@ -1,7 +1,5 @@
 #!/bin/sh
 
-set -x
-
 initfile=/opt/run.init
 
 GRAPHITE_HOST=${GRAPHITE_HOST:-localhost}
@@ -26,8 +24,9 @@ DATABASE_ROOT_PASS=${DATABASE_ROOT_PASS:-""}
 
 initGrafana() {
 
-   exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana & 1> /dev/null
-   sleep 5s
+   exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=/etc/grafana/grafana.ini &
+
+   sleep 10s
 
    ps ax | grep grafana | grep -v grep
 
@@ -50,7 +49,6 @@ then
       sqlite3 -batch -bail -stats /usr/share/grafana/data/grafana.db "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
 #      sleep 2s
 #      sqlite3 -batch -bail -stats /usr/share/grafana/data/grafana.db ".dump data_source"
-
     fi
 
   elif [ "${DATABASE_GRAFANA_TYPE}" == "mysql" ]
@@ -58,9 +56,9 @@ then
 
     mysql_opts="--host=${DATABASE_GRAFANA_HOST} --user=${DATABASE_ROOT_USER} --password=${DATABASE_ROOT_PASS} --port=${DATABASE_GRAFANA_PORT}"
 
-    if [ -z ${GRAFANA_DATABASE_HOST} ]
+    if [ -z ${DATABASE_GRAFANA_HOST} ]
     then
-      echo " [E] - i found no GRAFANA_DATABASE_HOST Parameter for type: '{GRAFANA_DATABASE_TYPE}'"
+      echo " [E] - i found no DATABASE_GRAFANA_HOST Parameter for type: '{DATABASE_GRAFANA_TYPE}'"
     else
 
       # wait for needed database
@@ -73,27 +71,32 @@ then
       sleep 10s
 
       # Passwords...
-      GRAFANA_DATABASE_PASS=${GRAFANA_DATABASE_PASS:-$(pwgen -s 15 1)}
+      DATABASE_GRAFANA_PASS=${DATABASE_GRAFANA_PASS:-$(pwgen -s 15 1)}
 
       (
-        echo "--- create user 'grafana'@'%' IDENTIFIED BY '${GRAFANA_DATABASE_PASS}';"
+        echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
         echo "CREATE DATABASE IF NOT EXISTS grafana;"
-        echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE VIEW, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${GRAFANA_DATABASE_PASS}';"
+        echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+        echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'${DATABASE_GRAFANA_HOST}' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+        echo "FLUSH PRIVILEGES;"
       ) | mysql ${mysql_opts}
 
-      INI="/opt/grafana/custom.ini"
+      INI="/etc/grafana/grafana.ini"
 
-      sed -i 's|^;type\ =\ .*|type\ =\ mysql|g'                               ${INI}
-      sed -i 's|^;host\ =\ -*|host\ = '${GRAFANA_DATABASE_HOST}'|g'           ${INI}
-      sed -i 's|^;name\ =\ -*|name\ = grafana|g'                              ${INI}
-      sed -i 's|^;user\ =\ -*|user\ = grafana|g'                              ${INI}
-      sed -i 's|^;password\ =\ -*|password\ = '${GRAFANA_DATABASE_PASS}'|g'   ${INI}
+      sed -i 's|^type\ =\ sqlite3|type\ =\ mysql|'                               ${INI}
+      sed -i 's|^host\ =|host\ = '${DATABASE_GRAFANA_HOST}':'${DATABASE_GRAFANA_PORT}'|g'           ${INI}
+      sed -i 's|^name\ =|name\ = grafana|g'                              ${INI}
+      sed -i 's|^user\ =|user\ = grafana|g'                              ${INI}
+      sed -i 's|^password\ =|password\ = '${DATABASE_GRAFANA_PASS}'|g'   ${INI}
 
       initGrafana
 
       (
-        echo "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 );"
-        echo "update 'org' set name = 'Docker' where id = 1";
+        echo "use grafana;"
+        echo "INSERT IGNORE INTO data_source values ( 1, 1, 0, 'graphite', 'graphite', 'proxy', 'http://${GRAPHITE_HOST}:${GRAPHITE_PORT}/graphite', NULL, NULL, 'graphite', 0, NULL, NULL, 1, NULL, now(), now(), NULL );"
+        echo "INSERT IGNORE INTO data_source values ( 2, 1, 0, 'graphite', 'tags', 'proxy', 'http://${GRAPHITE_HOST}:${GRAPHITE_PORT}/tags', NULL, NULL, 'tags', 0, NULL, NULL, 0, NULL, now(), now(), NULL );"
+        echo "--- insert IGNORE INTO into data_source ( org_id, version, type, name, access, url, database, basic_auth, is_default, created, updated, with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}','tags',0, 0, now(), now(),0 );"
+        echo "update org set name = 'Docker' where id = 1";
       ) | mysql ${mysql_opts}
 
     fi
@@ -103,7 +106,7 @@ then
 
   echo -e "\n"
   echo " ==================================================================="
-  echo " Grafana DatabaseUser 'grafana' password set to ${GRAFANA_DATABASE_PASS}"
+  echo " Grafana DatabaseUser 'grafana' password set to ${DATABASE_GRAFANA_PASS}"
   echo " You can use the Basic Auth Method to access the ReST-API:"
   echo "   curl http://admin:admin@localhost:3000/api/org"
   echo "   curl http://admin:admin@localhost:3000/api/datasources -X POST -H 'Content-Type: application/json;charset=UTF-8' --data-binary '{"name":"localGraphite","type":"graphite","url":"http://192.168.99.100","access":"proxy","isDefault":false,"database":"asd"}'"
