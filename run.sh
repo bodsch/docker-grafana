@@ -8,6 +8,10 @@ then
   docker rm   ${CONTAINER_NAME} 2> /dev/null
 fi
 
+GRAPHITE_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${USER}-graphite)
+DATABASE_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${USER}-mysql)
+
+
 # ---------------------------------------------------------------------------------------
 
 docker run \
@@ -16,14 +20,19 @@ docker run \
   --detach \
   --publish=3000:3000 \
   --link=${USER}-graphite:graphite \
-  --env GRAPHITE_HOST=${USER}-graphite.docker \
-  --env GRAPHITE_PORT=8088 \
-  --dns=172.17.0.1 \
+  --link=${USER}-mysql:database \
+  --env GRAPHITE_HOST=${GRAPHITE_IP} \
+  --env GRAPHITE_PORT=8080 \
+  --env DATABASE_GRAFANA_TYPE=mysql \
+  --env DATABASE_GRAFANA_HOST=${DATABASE_IP} \
+  --env DATABASE_GRAFANA_PORT=3306 \
+  --env DATABASE_ROOT_USER=root \
+  --env DATABASE_ROOT_PASS=foo.bar.Z \
   --hostname=${USER}-${TYPE} \
   --name ${CONTAINER_NAME} \
   ${TAG_NAME}
 
-[ -x /usr/local/bin/update-docker-dns.sh ] && sudo /usr/local/bin/update-docker-dns.sh
+# [ -x /usr/local/bin/update-docker-dns.sh ] && sudo /usr/local/bin/update-docker-dns.sh
 
 # ---------------------------------------------------------------------------------------
 # EOF
