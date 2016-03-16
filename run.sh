@@ -11,6 +11,9 @@ fi
 GRAPHITE_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${USER}-graphite)
 DATABASE_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${USER}-mysql)
 
+[ -z ${DATABASE_IP} ] && { echo "No Database Container '${USER}-mysql' running!"; exit 1; }
+
+DOCKER_DBA_ROOT_PASS=${DOCKER_DBA_ROOT_PASS:-foo.bar.Z}
 
 # ---------------------------------------------------------------------------------------
 
@@ -27,12 +30,10 @@ docker run \
   --env DATABASE_GRAFANA_HOST=${DATABASE_IP} \
   --env DATABASE_GRAFANA_PORT=3306 \
   --env DATABASE_ROOT_USER=root \
-  --env DATABASE_ROOT_PASS=foo.bar.Z \
+  --env DATABASE_ROOT_PASS=${DOCKER_DBA_ROOT_PASS} \
   --hostname=${USER}-${TYPE} \
   --name ${CONTAINER_NAME} \
   ${TAG_NAME}
-
-# [ -x /usr/local/bin/update-docker-dns.sh ] && sudo /usr/local/bin/update-docker-dns.sh
 
 # ---------------------------------------------------------------------------------------
 # EOF
