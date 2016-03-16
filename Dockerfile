@@ -1,19 +1,28 @@
-FROM alpine:3.3
+
+FROM alpine:edge
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.0.0"
+LABEL version="1.0.1"
 
-#   80: grafana (nginx)
 # 3000: grafana (plain)
 EXPOSE 3000
 
 ENV GRAFANA_VERSION=v2.6.0
 ENV GOPATH=/go
+
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk add --update \
+  apk --quiet update && \
+  apk --quiet upgrade
+
+RUN \
+  rm -Rf /var/run && \
+  ln -s /run /var/run
+
+RUN \
+  apk --quiet add \
     build-base \
     nodejs \
     netcat-openbsd \
@@ -58,7 +67,6 @@ RUN \
     mercurial && \
   rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
 
-
 ADD rootfs/ /
 
 VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/grafana/dashboards" ]
@@ -68,3 +76,4 @@ WORKDIR /usr/share/grafana
 # CMD [ '/bin/sh' ]
 ENTRYPOINT [ "/opt/startup.sh" ]
 
+# EOF
