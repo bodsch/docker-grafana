@@ -47,8 +47,6 @@ then
       initGrafana
 
       sqlite3 -batch -bail -stats /usr/share/grafana/data/grafana.db "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
-#      sleep 2s
-#      sqlite3 -batch -bail -stats /usr/share/grafana/data/grafana.db ".dump data_source"
     fi
 
   elif [ "${DATABASE_GRAFANA_TYPE}" == "mysql" ]
@@ -93,8 +91,8 @@ then
 
       (
         echo "use grafana;"
-        echo "INSERT IGNORE INTO data_source values ( 1, 1, 0, 'graphite', 'graphite', 'proxy', 'http://${GRAPHITE_HOST}:${GRAPHITE_PORT}/graphite', NULL, NULL, 'graphite', 0, NULL, NULL, 1, NULL, now(), now(), NULL );"
-        echo "INSERT IGNORE INTO data_source values ( 2, 1, 0, 'graphite', 'tags', 'proxy', 'http://${GRAPHITE_HOST}:${GRAPHITE_PORT}/tags', NULL, NULL, 'tags', 0, NULL, NULL, 0, NULL, now(), now(), NULL );"
+        echo "INSERT IGNORE INTO data_source values ( 1, 1, 0, 'graphite', 'graphite', 'proxy', 'http://${GRAPHITE_HOST}:${GRAPHITE_PORT}', NULL, NULL, 'graphite', 0, NULL, NULL, 1, NULL, now(), now(), NULL );"
+        echo "INSERT IGNORE INTO data_source values ( 2, 1, 0, 'graphite', 'tags', 'proxy', 'http://${GRAPHITE_HOST}:${GRAPHITE_PORT}', NULL, NULL, 'tags', 0, NULL, NULL, 0, NULL, now(), now(), NULL );"
         echo "--- insert IGNORE INTO into data_source ( org_id, version, type, name, access, url, database, basic_auth, is_default, created, updated, with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}','tags',0, 0, now(), now(),0 );"
         echo "update org set name = 'Docker' where id = 1";
       ) | mysql ${mysql_opts}
@@ -117,11 +115,10 @@ fi
 
 echo -e "\n Starting Supervisor.\n  You can safely CTRL-C and the container will continue to run with or without the -d (daemon) option\n\n"
 
-if [ -f /etc/supervisor.d/grafana.ini ]
+if [ -f /etc/supervisord.conf ]
 then
-  /usr/bin/supervisord >> /dev/null
-else
-  exec /bin/bash
+  /usr/bin/supervisord -c /etc/supervisord.conf >> /dev/null
 fi
+
 
 # EOF
