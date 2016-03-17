@@ -3,7 +3,7 @@ FROM alpine:edge
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.0.1"
+LABEL version="1.2.0"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -25,27 +25,30 @@ RUN \
   apk --quiet add \
     build-base \
     nodejs \
-    netcat-openbsd \
     go \
     git \
-    pwgen \
     mercurial \
+    netcat-openbsd \
+    curl \
+    pwgen \
+    jq \
+    yajl-tools \
     mysql-client \
     sqlite \
     supervisor
 
 RUN \
-  PATH=$PATH:$GOPATH/bin \
-  && mkdir -p $GOPATH/src/github.com/grafana && cd $GOPATH/src/github.com/grafana \
-  && git clone https://github.com/grafana/grafana.git -b ${GRAFANA_VERSION} \
-  && cd grafana \
-  && go run build.go setup \
-  && godep restore \
-  && go build . \
-  && npm install \
-  && npm install -g grunt-cli \
-  && cd $GOPATH/src/github.com/grafana/grafana/node_modules/karma-phantomjs-launcher/node_modules/phantomjs && node install \
-  && cd $GOPATH/src/github.com/grafana/grafana && grunt
+  PATH=$PATH:$GOPATH/bin && \
+  mkdir -p $GOPATH/src/github.com/grafana && cd $GOPATH/src/github.com/grafana && \
+  git clone https://github.com/grafana/grafana.git -b ${GRAFANA_VERSION} && \
+  cd grafana && \
+  go run build.go setup && \
+  godep restore && \
+  go build . && \
+  npm install && \
+  npm install -g grunt-cli && \
+  cd $GOPATH/src/github.com/grafana/grafana/node_modules/karma-phantomjs-launcher/node_modules/phantomjs && node install && \
+  cd $GOPATH/src/github.com/grafana/grafana && grunt
 
 RUN \
   mkdir /var/log/supervisor && \
