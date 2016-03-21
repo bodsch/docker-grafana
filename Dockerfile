@@ -76,7 +76,6 @@ VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/
 
 WORKDIR /usr/share/grafana
 
-# CMD [ '/bin/sh' ]
 ENTRYPOINT [ "/opt/startup.sh" ]
 
 # EOF
