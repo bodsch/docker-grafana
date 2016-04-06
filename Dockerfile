@@ -47,24 +47,24 @@ RUN \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -av  $GOPATH/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -av  $GOPATH/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
-  cp -arv $GOPATH/src/github.com/grafana/grafana/public             /usr/share/grafana/ && \
+  cp -arv $GOPATH/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
   cp -arv $GOPATH/src/github.com/grafana/grafana/conf               /usr/share/grafana/
 
 RUN \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor
 
-RUN \
-  npm uninstall -g grunt-cli && \
-  npm cache clear && \
-  go clean -i -r && \
-  apk del --purge \
-    build-base \
-    nodejs \
-    go \
-    git \
-    mercurial && \
-  rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
+#RUN \
+#  npm uninstall -g grunt-cli && \
+#  npm cache clear && \
+#  go clean -i -r && \
+#  apk del --purge \
+#    build-base \
+#    nodejs \
+#    go \
+#    git \
+#    mercurial && \
+#  rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
   
 ADD rootfs/ /
 
