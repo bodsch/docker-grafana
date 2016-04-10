@@ -54,17 +54,17 @@ RUN \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor
 
-#RUN \
-#  npm uninstall -g grunt-cli && \
-#  npm cache clear && \
-#  go clean -i -r && \
-#  apk del --purge \
-#    build-base \
-#    nodejs \
-#    go \
-#    git \
-#    mercurial && \
-#  rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
+RUN \
+  npm uninstall -g grunt-cli && \
+  npm cache clear && \
+  go clean -i -r && \
+  apk del --purge \
+    build-base \
+    nodejs \
+    go \
+    git \
+    mercurial && \
+  rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
   
 ADD rootfs/ /
 
