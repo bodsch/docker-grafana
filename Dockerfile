@@ -55,6 +55,12 @@ RUN \
   mkdir /var/log/supervisor
 
 RUN \
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-clock-panel && \
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-piechart-panel && \
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-simple-json-datasource && \
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install raintank-worldping-app
+
+RUN \
   npm uninstall -g grunt-cli && \
   npm cache clear && \
   go clean -i -r && \

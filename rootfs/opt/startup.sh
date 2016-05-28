@@ -73,6 +73,17 @@ handleDataSources() {
   sleep 2s
 }
 
+insertPlugins() {
+
+  local plugins="grafana-clock-panel grafana-piechart-panel grafana-simple-json-datasource raintank-worldping-app"
+
+  for p in ${plugins}
+  do
+    /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins"  plugins install ${p}
+  done
+
+}
+
 # -------------------------------------------------------------------------------------------------
 
 if [ ! -f "${initfile}" ]
@@ -135,6 +146,8 @@ then
   fi
 
   handleDataSources
+
+  # insertPlugins
 
   killGrafana
 
