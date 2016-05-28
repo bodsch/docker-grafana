@@ -3,7 +3,7 @@ FROM docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.3.0"
+LABEL version="1.4.0"
 
 # 3000: grafana (plain)
 EXPOSE 3000
