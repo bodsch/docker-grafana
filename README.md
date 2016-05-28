@@ -6,7 +6,8 @@ installs the Grafana Webinterface
 alpine:latest
 
 ## includes
- - grafana v2.6.0
+ - grafana v3.x
+ - many plugins
 
 ## Ports
  - 3000: grafana (plain)
