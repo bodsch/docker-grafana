@@ -129,58 +129,60 @@ startSupervisor() {
 
 configureDatabase() {
 
-  if [ "${DATABASE_TYPE}" == "sqlite3" ]
+  if [ ! -f ${initfile} ]
   then
-
-    if [ ! -f /usr/share/grafana/data/grafana.db ]
+    if [ "${DATABASE_TYPE}" == "sqlite3" ]
     then
 
-#       startGrafana
+      if [ ! -f /usr/share/grafana/data/grafana.db ]
+      then
 
-      sqlite3 \
-        -batch \
-        -bail \
-        -stats \
-        /usr/share/grafana/data/grafana.db \
-        "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
-    fi
+  #       startGrafana
 
-  elif [ "${DATABASE_TYPE}" == "mysql" ]
-  then
+        sqlite3 \
+          -batch \
+          -bail \
+          -stats \
+          /usr/share/grafana/data/grafana.db \
+          "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
+      fi
 
-    mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
-
-    if [ -z ${MYSQL_HOST} ]
+    elif [ "${DATABASE_TYPE}" == "mysql" ]
     then
-      echo " [E] - i found no MYSQL_HOST Parameter for type: '{DATABASE_TYPE}'"
-    else
 
-      waitForDatabase
+      mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 
-      # Passwords...
-      DATABASE_GRAFANA_PASS=$(pwgen -s 15 1)
+      if [ -z ${MYSQL_HOST} ]
+      then
+        echo " [E] - i found no MYSQL_HOST Parameter for type: '{DATABASE_TYPE}'"
+      else
 
-      (
-        echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
-        echo "CREATE DATABASE IF NOT EXISTS grafana;"
-        echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
-        echo "--- GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'${MYSQL_HOST}' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
-        echo "FLUSH PRIVILEGES;"
-      ) | mysql ${mysql_opts}
+        waitForDatabase
 
-      CONFIG_FILE="/etc/grafana/grafana.ini"
+        # Passwords...
+        DATABASE_GRAFANA_PASS=$(pwgen -s 15 1)
 
-      sed -i \
-        -e 's|^type\ =\ sqlite3|type\ =\ mysql|' \
-        -e 's|^host\ =|host\ = '${MYSQL_HOST}':'${MYSQL_PORT}'|g' \
-        -e 's|^name\ =|name\ = grafana|g' \
-        -e 's|^user\ =|user\ = grafana|g' \
-        -e 's|^password\ =|password\ = '${DATABASE_GRAFANA_PASS}'|g' \
-        ${CONFIG_FILE}
+        (
+          echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+          echo "CREATE DATABASE IF NOT EXISTS grafana;"
+          echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+          echo "--- GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'${MYSQL_HOST}' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+          echo "FLUSH PRIVILEGES;"
+        ) | mysql ${mysql_opts}
 
-#       startGrafana
+        CONFIG_FILE="/etc/grafana/grafana.ini"
 
+        sed -i \
+          -e 's|^type\ =\ sqlite3|type\ =\ mysql|' \
+          -e 's|^host\ =\ .*|host\ = '${MYSQL_HOST}':'${MYSQL_PORT}'|g' \
+          -e 's|^name\ =\ .*|name\ = grafana|g' \
+          -e 's|^user\ =\ .*|user\ = grafana|g' \
+          -e 's|^password\ =\ .*|password\ = '${DATABASE_GRAFANA_PASS}'|g' \
+          ${CONFIG_FILE}
+      fi
     fi
+
+    touch ${initfile}
   fi
 }
 
@@ -196,8 +198,6 @@ run() {
   # insertPlugins
 
   killGrafana
-
-  touch ${initfile}
 
   echo -e "\n"
   echo " ==================================================================="
