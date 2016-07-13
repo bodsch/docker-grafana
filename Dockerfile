@@ -56,13 +56,13 @@ RUN \
     git \
     mercurial && \
   rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
-  
+
 ADD rootfs/ /
 
 VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/grafana/dashboards" ]
 
 WORKDIR /usr/share/grafana
 
-ENTRYPOINT [ "/opt/startup.sh" ]
+CMD [ "/opt/startup.sh" ]
 
 # EOF

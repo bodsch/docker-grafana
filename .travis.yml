@@ -1,0 +1,12 @@
+sudo: required
+
+services:
+  - docker
+
+install:
+  - docker build --tag bodsch/docker-grafana .
+  - docker run --detach --name grafana bodsch/docker-grafana
+
+script:
+  - docker ps | grep -q grafana
+
