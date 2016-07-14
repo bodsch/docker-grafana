@@ -2,7 +2,7 @@ FROM bodsch/docker-alpine-base:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.4.2"
+LABEL version="1.5.0"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -29,17 +29,23 @@ RUN \
     sqlite && \
   go get github.com/grafana/grafana || true && \
   cd $GOPATH/src/github.com/grafana/grafana && \
-  go run build.go setup && \
-  $GOPATH/bin/godep restore && \
-  go run build.go build && \
+  go run build.go setup > /dev/null && \
+  $GOPATH/bin/godep restore > /dev/null && \
+  go run build.go build > /dev/null && \
+  npm config set loglevel silent && \
+  npm update minimatch@3.0.2 && \
+  npm update graceful-fs@4.0.0 && \
+  npm update lodash@4.0.0 && \
+  npm update fsevents@latest && \
+  npm update && \
   npm install && \
   npm install -g grunt-cli && \
-  grunt && \
+  grunt > /dev/null && \
   mkdir -p /usr/share/grafana/bin/ && \
-  cp -av  $GOPATH/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
-  cp -av  $GOPATH/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
-  cp -arv $GOPATH/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
-  cp -arv $GOPATH/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+  cp -a  $GOPATH/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
+  cp -a  $GOPATH/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
+  cp -ar $GOPATH/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
+  cp -ar $GOPATH/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
   /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-clock-panel && \
@@ -55,7 +61,12 @@ RUN \
     go \
     git \
     mercurial && \
-  rm -rf $GOPATH /tmp/* /var/cache/apk/* /root/.n* /usr/local/bin/phantomjs
+  rm -rf \
+    $GOPATH \
+    /tmp/* \
+    /var/cache/apk/* \
+    /root/.n* \
+    /usr/local/bin/phantomjs
 
 ADD rootfs/ /
 

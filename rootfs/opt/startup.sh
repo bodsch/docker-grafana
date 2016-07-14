@@ -22,7 +22,13 @@ MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 GRAPHITE_HOST=${GRAPHITE_HOST:-graphite}
 GRAPHITE_PORT=${GRAPHITE_PORT:-8080}
 
-DATABASE_GRAFANA_PASS=grafana # $(pwgen -s 15 1)
+DATABASE_GRAFANA_PASS=${DATABASE_GRAFANA_PASS:-grafana}
+
+DBA_TYPE=
+DBA_HOST=
+DBA_USER=
+DBA_PASS=
+DBA_NAME=
 
 # -------------------------------------------------------------------------------------------------
 
@@ -42,6 +48,19 @@ waitForDatabase() {
 prepare() {
 
   [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
+
+  if [ "${DATABASE_TYPE}" == "sqlite3" ]
+  then
+    DBA_TYPE=sqlite3
+
+  elif [ "${DATABASE_TYPE}" == "mysql" ]
+  then
+    DBA_TYPE=mysql
+    DBA_HOST="${MYSQL_HOST}:${MYSQL_PORT}"
+    DBA_USER=grafana
+    DBA_PASS=${DATABASE_GRAFANA_PASS}
+    DBA_NAME=grafana
+  fi
 }
 
 startGrafana() {
@@ -160,27 +179,28 @@ configureDatabase() {
         waitForDatabase
 
         (
-          echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+          echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
           echo "CREATE DATABASE IF NOT EXISTS grafana;"
-          echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
-          echo "--- GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'${MYSQL_HOST}' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
+          echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
+          echo "--- GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'${MYSQL_HOST}' IDENTIFIED BY '${DBA_PASS}';"
           echo "FLUSH PRIVILEGES;"
         ) | mysql ${mysql_opts}
-
-        CONFIG_FILE="/etc/grafana/grafana.ini"
-
-        sed -i \
-          -e 's|^type\ =\ sqlite3|type\ =\ mysql|' \
-          -e 's|^host\ =\ .*|host\ = '${MYSQL_HOST}':'${MYSQL_PORT}'|g' \
-          -e 's|^name\ =\ .*|name\ = grafana|g' \
-          -e 's|^user\ =\ .*|user\ = grafana|g' \
-          -e 's|^password\ =\ .*|password\ = '${DATABASE_GRAFANA_PASS}'|g' \
-          ${CONFIG_FILE}
       fi
     fi
 
     touch ${initfile}
   fi
+
+  CONFIG_FILE="/etc/grafana/grafana.ini"
+
+  sed -i \
+    -e 's|^type\ =\ %DBA_TYPE%|type\ =\ '${DBA_TYPE}'|' \
+    -e 's|^host\ =\ %DBA_HOST%|host\ =\ '${DBA_HOST}'|g' \
+    -e 's|^name\ =\ %DBA_NAME%|name\ =\ '${DBA_NAME}'|g' \
+    -e 's|^user\ =\ %DBA_USER%|user\ =\ '${DBA_USER}'|g' \
+    -e 's|^password\ =\ %DBA_PASS%|password\ =\ '${DBA_PASS}'|g' \
+    ${CONFIG_FILE}
+
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -198,7 +218,7 @@ run() {
 
   echo -e "\n"
   echo " ==================================================================="
-  echo " Grafana DatabaseUser 'grafana' password set to '${DATABASE_GRAFANA_PASS}'"
+  echo " Grafana DatabaseUser 'grafana' password set to '${DBA_PASS}'"
   echo ""
   echo " You can use the Basic Auth Method to access the ReST-API:"
   echo "   curl http://admin:admin@localhost:3000/api/org"
