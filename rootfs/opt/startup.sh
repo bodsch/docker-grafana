@@ -160,7 +160,7 @@ configureDatabase() {
         waitForDatabase
 
         # Passwords...
-        DATABASE_GRAFANA_PASS=$(pwgen -s 15 1)
+        DATABASE_GRAFANA_PASS=grafana # $(pwgen -s 15 1)
 
         (
           echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
