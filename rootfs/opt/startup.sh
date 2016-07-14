@@ -22,6 +22,8 @@ MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 GRAPHITE_HOST=${GRAPHITE_HOST:-graphite}
 GRAPHITE_PORT=${GRAPHITE_PORT:-8080}
 
+DATABASE_GRAFANA_PASS=grafana # $(pwgen -s 15 1)
+
 # -------------------------------------------------------------------------------------------------
 
 waitForDatabase() {
@@ -137,8 +139,6 @@ configureDatabase() {
       if [ ! -f /usr/share/grafana/data/grafana.db ]
       then
 
-  #       startGrafana
-
         sqlite3 \
           -batch \
           -bail \
@@ -158,9 +158,6 @@ configureDatabase() {
       else
 
         waitForDatabase
-
-        # Passwords...
-        DATABASE_GRAFANA_PASS=grafana # $(pwgen -s 15 1)
 
         (
           echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DATABASE_GRAFANA_PASS}';"
