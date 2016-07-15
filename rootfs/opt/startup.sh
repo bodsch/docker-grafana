@@ -194,11 +194,11 @@ configureDatabase() {
   CONFIG_FILE="/etc/grafana/grafana.ini"
 
   sed -i \
-    -e 's|^type\ =\ %DBA_TYPE%|type\ =\ '${DBA_TYPE}'|' \
-    -e 's|^host\ =\ %DBA_HOST%|host\ =\ '${DBA_HOST}'|g' \
-    -e 's|^name\ =\ %DBA_NAME%|name\ =\ '${DBA_NAME}'|g' \
-    -e 's|^user\ =\ %DBA_USER%|user\ =\ '${DBA_USER}'|g' \
-    -e 's|^password\ =\ %DBA_PASS%|password\ =\ '${DBA_PASS}'|g' \
+    -e 's|%DBA_TYPE%|'${DBA_TYPE}'|' \
+    -e 's|%DBA_HOST%|'${DBA_HOST}'|g' \
+    -e 's|%DBA_NAME%|'${DBA_NAME}'|g' \
+    -e 's|%DBA_USER%|'${DBA_USER}'|g' \
+    -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
     ${CONFIG_FILE}
 
 }
