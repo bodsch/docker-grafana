@@ -6,7 +6,7 @@
    "withCredentials" : false,
    "url" : "http://%GRAPHITE_HOST%:%GRAPHITE_PORT%",
    "name" : "%GRAPHITE_DATABASE%",
-   "isDefault" : false,
+   "isDefault" : %DATABASE_DEFAULT%,
    "type" : "graphite",
    "jsonData" : null,
    "orgId" : 1,

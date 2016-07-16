@@ -24,6 +24,8 @@ GRAPHITE_PORT=${GRAPHITE_PORT:-8080}
 
 DATABASE_GRAFANA_PASS=${DATABASE_GRAFANA_PASS:-grafana}
 
+GRAFANA_CONFIG_FILE="/etc/grafana/grafana.ini"
+
 DBA_TYPE=
 DBA_HOST=
 DBA_USER=
@@ -65,7 +67,7 @@ prepare() {
 
 startGrafana() {
 
-  exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=/etc/grafana/grafana.ini &
+  exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} 2> /dev/null &
 
   sleep 10s
 }
@@ -74,9 +76,12 @@ killGrafana() {
 
   grafana_pid=$(ps ax | grep grafana | grep -v grep | awk '{print $1}')
 
-  kill -9 ${grafana_pid}
+  if [ ! -z "${grafana_pid}" ]
+  then
+    kill -9 ${grafana_pid}
 
-  sleep 2s
+    sleep 2s
+  fi
 }
 
 handleDataSources() {
@@ -95,11 +100,12 @@ handleDataSources() {
       id=$(echo ${data} | jq  --raw-output '.id')
       name=$(echo ${data} | jq --raw-output '.name')
       type=$(echo ${data} | jq --raw-output '.type')
+      default=$(echo ${data} | jq --raw-output '.isDefault')
 
       curl ${curl_opts} \
         --request PUT \
         --header 'Content-Type: application/json;charset=UTF-8' \
-        --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_PORT}\"}" \
+        --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_PORT}\"}" \
         http://localhost:3000/api/datasources/${id}
 
     done
@@ -108,10 +114,18 @@ handleDataSources() {
     do
       cp /opt/grafana/datasource.tpl /opt/grafana/datasource-${i}.json
 
+      if [ "${i}" == "graphite" ]
+      then
+        DATABASE_DEFAULT="true"
+      else
+        DATABASE_DEFAULT="false"
+      fi
+
       sed -i \
         -e "s/%GRAPHITE_HOST%/${GRAPHITE_HOST}/" \
         -e "s/%GRAPHITE_PORT%/${GRAPHITE_PORT}/" \
         -e "s/%GRAPHITE_DATABASE%/${i}/" \
+        -e "s/%DATABASE_DEFAULT%/${DATABASE_DEFAULT}/" \
         /opt/grafana/datasource-${i}.json
 
       curl ${curl_opts} \
@@ -182,7 +196,6 @@ configureDatabase() {
           echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
           echo "CREATE DATABASE IF NOT EXISTS grafana;"
           echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
-          echo "--- GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'${MYSQL_HOST}' IDENTIFIED BY '${DBA_PASS}';"
           echo "FLUSH PRIVILEGES;"
         ) | mysql ${mysql_opts}
       fi
@@ -191,15 +204,13 @@ configureDatabase() {
     touch ${initfile}
   fi
 
-  CONFIG_FILE="/etc/grafana/grafana.ini"
-
   sed -i \
     -e 's|%DBA_TYPE%|'${DBA_TYPE}'|' \
     -e 's|%DBA_HOST%|'${DBA_HOST}'|g' \
     -e 's|%DBA_NAME%|'${DBA_NAME}'|g' \
     -e 's|%DBA_USER%|'${DBA_USER}'|g' \
     -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
-    ${CONFIG_FILE}
+    ${GRAFANA_CONFIG_FILE}
 
 }
 
