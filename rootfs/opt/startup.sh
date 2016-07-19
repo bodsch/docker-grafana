@@ -67,6 +67,11 @@ prepare() {
 
 startGrafana() {
 
+  if [ ! -z ${MYSQL_HOST} ]
+  then
+    waitForDatabase
+  fi
+
   exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} 2> /dev/null &
 
   sleep 10s
