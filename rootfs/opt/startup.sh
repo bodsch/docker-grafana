@@ -36,7 +36,7 @@ DBA_NAME=
 
 waitForDatabase() {
 
-  local mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT} --execute=\";\" --silent"
+  local mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT} --silent --batch --skip-column-names"
 
   # wait for needed database
   while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
@@ -47,9 +47,7 @@ waitForDatabase() {
   # must start initdb and do other jobs well
   echo " [i] wait for database for there initdb and do other jobs well"
 
-  sleep 10s
-
-  until mysql ${mysql_opts}
+  until mysql ${mysql_opts} --execute="select 1 from mysql.user limit 1" > /dev/null
   do
     echo " . "
     sleep 3s
@@ -179,6 +177,8 @@ startSupervisor() {
 
 configureDatabase() {
 
+  result=999
+
   if [ ! -f ${initfile} ]
   then
     if [ "${DATABASE_TYPE}" == "sqlite3" ]
@@ -193,6 +193,8 @@ configureDatabase() {
           -stats \
           /usr/share/grafana/data/grafana.db \
           "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
+
+        result=$?
       fi
 
     elif [ "${DATABASE_TYPE}" == "mysql" ]
@@ -213,10 +215,15 @@ configureDatabase() {
           echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
           echo "FLUSH PRIVILEGES;"
         ) | mysql ${mysql_opts}
+
+        result=$?
       fi
     fi
 
-    touch ${initfile}
+    if [ ${result} -eq 0 ]
+    then
+      touch ${initfile}
+    fi
   fi
 
   sed -i \
