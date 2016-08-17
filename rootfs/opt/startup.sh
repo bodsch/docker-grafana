@@ -36,6 +36,8 @@ DBA_NAME=
 
 waitForDatabase() {
 
+  local mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT} --execute=\";\" --silent"
+
   # wait for needed database
   while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
   do
@@ -44,7 +46,15 @@ waitForDatabase() {
 
   # must start initdb and do other jobs well
   echo " [i] wait for database for there initdb and do other jobs well"
+
   sleep 10s
+
+  until mysql ${mysql_opts}
+  do
+    echo " . "
+    sleep 3s
+  done
+
 }
 
 prepare() {
