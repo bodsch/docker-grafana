@@ -123,7 +123,7 @@ handleDataSources() {
 
     done
   else
-    for i in graphite tags
+    for i in graphite events
     do
       cp /opt/grafana/datasource.tpl /opt/grafana/datasource-${i}.json
 
