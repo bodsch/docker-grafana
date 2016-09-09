@@ -12,6 +12,8 @@ WORK_DIR=${WORK_DIR}/grafana
 
 initfile=${WORK_DIR}/run.init
 
+ORGANISATION=${ORGANISATION:-"Docker"}
+
 DATABASE_TYPE=${DATABASE_TYPE:-sqlite3}
 
 MYSQL_HOST=${MYSQL_HOST:-""}
@@ -96,6 +98,25 @@ killGrafana() {
     sleep 2s
   fi
 }
+
+handleOrganisation() {
+
+  curl_opts="--silent --user admin:admin"
+
+  data=$(curl ${curl_opts} http://localhost:3000/api/org)
+
+  name=$(echo ${data} | jq --raw-output '.name')
+
+  if [ "${name}" != "${ORGANISATION}"  ]
+  then
+    curl ${curl_opts} \
+      --request PUT \
+      --header 'Content-Type: application/json;charset=UTF-8' \
+      --data-binary "{\"name\":\"${ORGANISATION}\"}" \
+      http://localhost/grafana/api/org
+  fi
+}
+
 
 handleDataSources() {
 
@@ -243,6 +264,8 @@ run() {
   prepare
   configureDatabase
   startGrafana
+
+  handleOrganisation
   handleDataSources
 
   # insertPlugins
@@ -251,7 +274,8 @@ run() {
 
   echo -e "\n"
   echo " ==================================================================="
-  echo " Grafana DatabaseUser 'grafana' password set to '${DBA_PASS}'"
+  echo " Grafana Database User 'grafana' password set to '${DBA_PASS}'"
+  echo " Grafana Organisation set to '${ORGANISATION}'"
   echo ""
   echo " You can use the Basic Auth Method to access the ReST-API:"
   echo "   curl http://admin:admin@localhost:3000/api/org"
