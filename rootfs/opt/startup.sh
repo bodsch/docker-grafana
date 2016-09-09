@@ -113,7 +113,7 @@ handleOrganisation() {
       --request PUT \
       --header 'Content-Type: application/json;charset=UTF-8' \
       --data-binary "{\"name\":\"${ORGANISATION}\"}" \
-      http://localhost/grafana/api/org
+      http://localhost:3000/api/org
   fi
 }
 
