@@ -1,8 +1,8 @@
-FROM bodsch/docker-alpine-base:3.4
+FROM bodsch/docker-alpine-base:1609-01
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.5.0"
+LABEL version="1.6.0"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -14,6 +14,7 @@ ENV GO15VENDOREXPERIMENT=0
 
 RUN \
   apk --quiet --no-cache update && \
+  apk --quiet --no-cache upgrade && \
   apk --quiet --no-cache add \
     build-base \
     nodejs \
@@ -29,18 +30,18 @@ RUN \
     sqlite && \
   go get github.com/grafana/grafana || true && \
   cd $GOPATH/src/github.com/grafana/grafana && \
-  go run build.go setup > /dev/null && \
-  $GOPATH/bin/godep restore > /dev/null && \
-  go run build.go build > /dev/null && \
+  go run build.go latest && \
+  echo "grafana setup .." && \
+  go run build.go setup > /dev/null 2> /dev/null && \
+  echo "grafana build .." && \
+  go run build.go build > /dev/null 2> /dev/null && \
   npm config set loglevel silent && \
   npm update minimatch@3.0.2 && \
   npm update graceful-fs@4.0.0 && \
   npm update lodash@4.0.0 && \
   npm update fsevents@latest && \
-  npm update && \
-  npm install && \
-  npm install -g grunt-cli && \
-  grunt > /dev/null && \
+  npm install   > /dev/null 2> /dev/null && \
+  npm run build > /dev/null 2> /dev/null && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -a  $GOPATH/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -a  $GOPATH/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
