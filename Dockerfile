@@ -1,8 +1,9 @@
-FROM bodsch/docker-alpine-base:1609-01
+
+FROM bodsch/docker-alpine-base:1610-01
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.6.0"
+LABEL version="1.7.0"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -29,7 +30,7 @@ RUN \
     mysql-client \
     sqlite && \
   go get github.com/grafana/grafana || true && \
-  cd $GOPATH/src/github.com/grafana/grafana && \
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   go run build.go latest && \
   echo "grafana setup .." && \
   go run build.go setup > /dev/null 2> /dev/null && \
@@ -43,16 +44,16 @@ RUN \
   npm install   > /dev/null 2> /dev/null && \
   npm run build > /dev/null 2> /dev/null && \
   mkdir -p /usr/share/grafana/bin/ && \
-  cp -a  $GOPATH/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
-  cp -a  $GOPATH/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
-  cp -ar $GOPATH/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
-  cp -ar $GOPATH/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+  cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
+  cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
+  cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
+  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
   /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-clock-panel && \
   /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-piechart-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-simple-json-datasource && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install raintank-worldping-app && \
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install jdbranham-diagram-panel && \
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install mtanda-histogram-panel && \
   npm uninstall -g grunt-cli && \
   npm cache clear && \
   go clean -i -r && \
@@ -63,13 +64,13 @@ RUN \
     git \
     mercurial && \
   rm -rf \
-    $GOPATH \
+    ${GOPATH} \
     /tmp/* \
     /var/cache/apk/* \
     /root/.n* \
     /usr/local/bin/phantomjs
 
-ADD rootfs/ /
+COPY rootfs/ /
 
 VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/grafana/dashboards" ]
 

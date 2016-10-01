@@ -1,37 +1,53 @@
-TYPE := grafana
-IMAGE_NAME := docker-${TYPE}
+
+CONTAINER  := grafana
+IMAGE_NAME := docker-grafana
+
+DATA_DIR   := /tmp/docker-data
+
 
 build:
-	docker build --rm --tag=$(IMAGE_NAME) .
+	mkdir -vp ${DATA_DIR}
+	docker \
+		build \
+		--rm --tag=$(IMAGE_NAME) .
+	@echo Image tag: ${IMAGE_NAME}
 
 run:
-	docker run \
+	docker \
+		run \
 		--detach \
 		--interactive \
 		--tty \
 		--publish=3000:3000 \
-		--hostname=graphite \
-		--name=${TYPE} \
+		--volume=${DATA_DIR}:/srv \
+		--hostname=${CONTAINER} \
+		--name=${CONTAINER} \
 		$(IMAGE_NAME)
 
 shell:
-	docker run \
-    --rm \
-		--interactive \
-    --tty \
-    --publish=3000:3000 \
-		--hostname=graphite \
-		--name=${TYPE} \
-		$(IMAGE_NAME) \
-    /bin/sh
-
-exec:
-	docker exec \
+	docker \
+		run \
+		--rm \
 		--interactive \
 		--tty \
-		${TYPE} \
-		/bin/sh
+		--publish=3000:3000 \
+		--volume=${DATA_DIR}:/srv \
+		--hostname=${CONTAINER} \
+		--name=${CONTAINER} \
+		$(IMAGE_NAME)
+
+exec:
+	docker \
+		exec \
+		--interactive \
+		--tty \
+		${CONTAINER} \
+		/bin/bash
 
 stop:
-	docker kill \
-		${TYPE}
+	docker \
+		kill ${CONTAINER}
+
+history:
+	docker \
+		history ${IMAGE_NAME}
