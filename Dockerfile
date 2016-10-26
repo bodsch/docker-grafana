@@ -1,9 +1,9 @@
 
-FROM bodsch/docker-alpine-base:1610-01
+FROM bodsch/docker-alpine-base:1610-02
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.7.0"
+LABEL version="1.7.1"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -14,9 +14,9 @@ ENV GO15VENDOREXPERIMENT=0
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk --quiet --no-cache update && \
-  apk --quiet --no-cache upgrade && \
-  apk --quiet --no-cache add \
+  apk --no-cache update && \
+  apk --no-cache upgrade && \
+  apk --no-cache add \
     build-base \
     nodejs \
     go \
@@ -76,6 +76,6 @@ VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/
 
 WORKDIR /usr/share/grafana
 
-CMD [ "/opt/startup.sh" ]
+CMD /opt/startup.sh
 
 # EOF
