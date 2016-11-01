@@ -10,7 +10,7 @@ fi
 WORK_DIR=${WORK_DIR:-/srv}
 WORK_DIR=${WORK_DIR}/grafana
 
-initfile=${WORK_DIR}/run.init
+initfile=${WORK_DIR}/database.init
 
 ORGANISATION=${ORGANISATION:-"Docker"}
 
@@ -21,8 +21,11 @@ MYSQL_PORT=${MYSQL_PORT:-"3306"}
 MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
 MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 
-GRAPHITE_HOST=${GRAPHITE_HOST:-graphite}
-GRAPHITE_PORT=${GRAPHITE_PORT:-8080}
+GRAPHITE_HOST=${GRAPHITE_HOST:-""}
+GRAPHITE_PORT=${GRAPHITE_PORT:-2003}
+
+MEMCACHE_HOST=${MEMCACHE_HOST:-""}
+MEMCACHE_PORT=${MEMCACHE_PORT:-"11211"}
 
 DATABASE_GRAFANA_PASS=${DATABASE_GRAFANA_PASS:-grafana}
 
@@ -46,7 +49,7 @@ waitForDatabase() {
     # wait for needed database
     while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
     do
-      sleep 3s
+      sleep 5s
     done
 
     # must start initdb and do other jobs well
@@ -61,6 +64,7 @@ waitForDatabase() {
   fi
 
 }
+
 
 prepare() {
 
@@ -78,16 +82,84 @@ prepare() {
     DBA_PASS=${DATABASE_GRAFANA_PASS}
     DBA_NAME=grafana
   fi
+
+  if [ -z "${MEMCACHE_HOST}" ]
+  then
+    SESSION_PROVIDER="file"
+    SESSION_CONFIG="sessions"
+  else
+    SESSION_PROVIDER="memcache"
+    SESSION_CONFIG="${MEMCACHE_HOST}:${MEMCACHE_PORT}"
+  fi
+
+  if [ -z ${GRAPHITE_HOST} ]
+  then
+    GRAPHITE_PORT=
+  else
+    GRAPHITE_HOST="${GRAPHITE_HOST}:${GRAPHITE_PORT}"
+  fi
+
+  sed -i \
+    -e 's|%DBA_TYPE%|'${DBA_TYPE}'|' \
+    -e 's|%DBA_HOST%|'${DBA_HOST}'|g' \
+    -e 's|%DBA_NAME%|'${DBA_NAME}'|g' \
+    -e 's|%DBA_USER%|'${DBA_USER}'|g' \
+    -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
+    -e 's|%SESSION_PROVIDER%|'${SESSION_PROVIDER}'|g' \
+    -e 's|%SESSION_CONFIG%|'${SESSION_CONFIG}'|g' \
+    -e 's|%GRAPHITE_HOST%|'${GRAPHITE_HOST}'|g' \
+    ${GRAFANA_CONFIG_FILE}
+}
+
+
+createDatabase() {
+
+  result=999
+
+  if [ ! -f ${initfile} ]
+  then
+    if [ "${DATABASE_TYPE}" == "sqlite3" ]
+    then
+
+      if [ ! -f /usr/share/grafana/data/grafana.db ]
+      then
+        :
+      fi
+
+    elif [ "${DATABASE_TYPE}" == "mysql" ]
+    then
+
+      local mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
+
+      if [ -z ${MYSQL_HOST} ]
+      then
+        echo " [E] - i found no MYSQL_HOST Parameter for type: '{DATABASE_TYPE}'"
+      else
+
+        waitForDatabase
+
+        (
+          echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
+          echo "CREATE DATABASE IF NOT EXISTS grafana;"
+          echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
+          echo "FLUSH PRIVILEGES;"
+        ) | mysql ${mysql_opts}
+
+        result=$?
+      fi
+    fi
+
+    if [ ${result} -eq 0 ]
+    then
+      touch ${initfile}
+    fi
+  fi
+
 }
 
 startGrafana() {
 
-  if [ ! -z ${MYSQL_HOST} ]
-  then
-    waitForDatabase
-  fi
-
-  exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} cfg:default.paths.data=/usr/share/grafana cfg:default.paths.logs=/var/log/grafana &
+  exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} cfg:default.paths.logs=/var/log/grafana &
 
   if [ $? -eq 0 ]
   then
@@ -98,6 +170,7 @@ startGrafana() {
 
   sleep 10s
 }
+
 
 killGrafana() {
 
@@ -110,6 +183,7 @@ killGrafana() {
     sleep 2s
   fi
 }
+
 
 handleOrganisation() {
 
@@ -185,6 +259,7 @@ handleDataSources() {
   sleep 2s
 }
 
+
 insertPlugins() {
 
   local plugins="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel"
@@ -216,73 +291,12 @@ startSupervisor() {
   fi
 }
 
-configureDatabase() {
-
-  result=999
-
-  if [ ! -f ${initfile} ]
-  then
-    if [ "${DATABASE_TYPE}" == "sqlite3" ]
-    then
-
-      if [ ! -f /usr/share/grafana/data/grafana.db ]
-      then
-
-        sqlite3 \
-          -batch \
-          -bail \
-          -stats \
-          /usr/share/grafana/data/grafana.db \
-          "insert into 'data_source' ( org_id,version,type,name,access,url,basic_auth,is_default,json_data,created,updated,with_credentials ) values ( 1, 0, 'graphite','graphite','proxy','http://${GRAPHITE_HOST}:${GRAPHITE_PORT}',0,1,'{}',DateTime('now'),DateTime('now'),0 )"
-
-        result=$?
-      fi
-
-    elif [ "${DATABASE_TYPE}" == "mysql" ]
-    then
-
-      mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
-
-      if [ -z ${MYSQL_HOST} ]
-      then
-        echo " [E] - i found no MYSQL_HOST Parameter for type: '{DATABASE_TYPE}'"
-      else
-
-        waitForDatabase
-
-        (
-          echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
-          echo "CREATE DATABASE IF NOT EXISTS grafana;"
-          echo "GRANT SELECT, INSERT, UPDATE, DELETE, DROP, CREATE, CREATE VIEW, ALTER, INDEX, EXECUTE ON grafana.* TO 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
-          echo "FLUSH PRIVILEGES;"
-        ) | mysql ${mysql_opts}
-
-        result=$?
-      fi
-    fi
-
-    if [ ${result} -eq 0 ]
-    then
-      touch ${initfile}
-    fi
-  fi
-
-  sed -i \
-    -e 's|%DBA_TYPE%|'${DBA_TYPE}'|' \
-    -e 's|%DBA_HOST%|'${DBA_HOST}'|g' \
-    -e 's|%DBA_NAME%|'${DBA_NAME}'|g' \
-    -e 's|%DBA_USER%|'${DBA_USER}'|g' \
-    -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
-    ${GRAFANA_CONFIG_FILE}
-
-}
-
 # -------------------------------------------------------------------------------------------------
 
 run() {
 
   prepare
-  configureDatabase
+  createDatabase
   startGrafana
 
   handleOrganisation
