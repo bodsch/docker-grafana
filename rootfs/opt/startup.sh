@@ -160,6 +160,8 @@ createDatabase() {
 
 startGrafana() {
 
+  waitForDatabase
+
   exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} cfg:default.paths.logs=/var/log/grafana &
 
   if [ $? -eq 0 ]
