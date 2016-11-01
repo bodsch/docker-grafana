@@ -171,7 +171,15 @@ startGrafana() {
     echo "result code: $?"
   fi
 
-  sleep 10s
+  echo "wait for initalize grafana .. "
+
+  while ! nc -z localhost 3000
+  do
+    sleep 5s
+  done
+
+  sleep 5s
+
 }
 
 

@@ -14,19 +14,19 @@ A Docker container for an (currently) actual Grafana Webinterface build from Sou
 Your can use the included Makefile.
 
 To build the Container:
-```make```
+    make
 
 Starts the Container:
-```make run```
+    make run
 
 Starts the Container with Login Shell:
-```make shell```
+    make shell
 
 Entering the Container:
-```make exec```
+    make exec
 
 Stop (but **not kill**):
-```make stop```
+    make stop
 
 
 # Docker Hub
