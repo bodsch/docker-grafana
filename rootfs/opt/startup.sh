@@ -38,22 +38,27 @@ DBA_NAME=
 
 waitForDatabase() {
 
-  local mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT} --silent --batch --skip-column-names"
+  if [ "${DATABASE_TYPE}" == "mysql" ]
+  then
 
-  # wait for needed database
-  while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
-  do
-    sleep 3s
-  done
+    local mysql_opts="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT} --silent --batch --skip-column-names"
 
-  # must start initdb and do other jobs well
-  echo " [i] wait for database for there initdb and do other jobs well"
+    # wait for needed database
+    while ! nc -z ${MYSQL_HOST} ${MYSQL_PORT}
+    do
+      sleep 3s
+    done
 
-  until mysql ${mysql_opts} --execute="select 1 from mysql.user limit 1" > /dev/null
-  do
-    echo " . "
-    sleep 3s
-  done
+    # must start initdb and do other jobs well
+    echo " [i] wait for database for there initdb and do other jobs well"
+
+    until mysql ${mysql_opts} --execute="select 1 from mysql.user limit 1" > /dev/null
+    do
+      echo " . "
+      sleep 3s
+    done
+
+  fi
 
 }
 
@@ -82,7 +87,14 @@ startGrafana() {
     waitForDatabase
   fi
 
-  exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} 2> /dev/null &
+  exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} cfg:default.paths.data=/usr/share/grafana cfg:default.paths.logs=/var/log/grafana &
+
+  if [ $? -eq 0 ]
+  then
+    echo "successful ..."
+  else
+    echo "result code: $?"
+  fi
 
   sleep 10s
 }
@@ -175,7 +187,7 @@ handleDataSources() {
 
 insertPlugins() {
 
-  local plugins="grafana-clock-panel grafana-piechart-panel grafana-simple-json-datasource raintank-worldping-app"
+  local plugins="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel"
 
   for p in ${plugins}
   do
@@ -183,6 +195,14 @@ insertPlugins() {
   done
 
 }
+
+
+updatePlugin() {
+
+  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins upgrade-all
+
+}
+
 
 startSupervisor() {
 
@@ -269,6 +289,7 @@ run() {
   handleDataSources
 
   # insertPlugins
+  updatePlugin
 
   killGrafana
 
