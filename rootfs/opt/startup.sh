@@ -23,6 +23,7 @@ MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 
 GRAPHITE_HOST=${GRAPHITE_HOST:-""}
 GRAPHITE_PORT=${GRAPHITE_PORT:-2003}
+GRAPHITE_HTTP_PORT=${GRAPHITE_HTTP_PORT:-8080}
 
 MEMCACHE_HOST=${MEMCACHE_HOST:-""}
 MEMCACHE_PORT=${MEMCACHE_PORT:-"11211"}
@@ -225,7 +226,7 @@ handleDataSources() {
       curl ${curl_opts} \
         --request PUT \
         --header 'Content-Type: application/json;charset=UTF-8' \
-        --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_PORT}\"}" \
+        --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
         http://localhost:3000/api/datasources/${id}
 
     done
@@ -243,7 +244,7 @@ handleDataSources() {
 
       sed -i \
         -e "s/%GRAPHITE_HOST%/${GRAPHITE_HOST}/" \
-        -e "s/%GRAPHITE_PORT%/${GRAPHITE_PORT}/" \
+        -e "s/%GRAPHITE_PORT%/${GRAPHITE_HTTP_PORT}/" \
         -e "s/%GRAPHITE_DATABASE%/${i}/" \
         -e "s/%DATABASE_DEFAULT%/${DATABASE_DEFAULT}/" \
         /opt/grafana/datasource-${i}.json
