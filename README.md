@@ -48,11 +48,13 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 `MYSQL_ROOT_PASS` MySQL Root Password
 
-`GRAPHITE_HOST` the graphite Hostname to send internal Grafana metrics
-
-`GRAPHITE_PORT` the graphite Port (default: 2003)
+`GRAPHITE_HOST` the graphite Hostname
 
 `GRAPHITE_HTTP_PORT` the graphite HTTP Port (default: 8080)
+
+`CARBON_HOST` the carbon Hostname to send internal Grafana metrics, can be identical with `GRAPHITE_HOST`
+
+`CARBON_PORT` the carbon Port (default: 2003)
 
 `MEMCACHE_HOST` the memcache Hostname to store Sessions
 

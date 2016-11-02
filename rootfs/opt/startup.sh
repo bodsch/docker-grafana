@@ -111,7 +111,7 @@ prepare() {
     -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
     -e 's|%SESSION_PROVIDER%|'${SESSION_PROVIDER}'|g' \
     -e 's|%SESSION_CONFIG%|'${SESSION_CONFIG}'|g' \
-    -e 's|%GRAPHITE_HOST%|'${carbon_host}'|g' \
+    -e 's|%CARBON_HOST%|'${carbon_host}'|g' \
     ${GRAFANA_CONFIG_FILE}
 }
 
