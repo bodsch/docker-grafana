@@ -25,6 +25,9 @@ GRAPHITE_HOST=${GRAPHITE_HOST:-""}
 GRAPHITE_PORT=${GRAPHITE_PORT:-2003}
 GRAPHITE_HTTP_PORT=${GRAPHITE_HTTP_PORT:-8080}
 
+CARBON_HOST=${CARBON_HOST:-""}
+CARBON_PORT=${CARBON_PORT:-2003}
+
 MEMCACHE_HOST=${MEMCACHE_HOST:-""}
 MEMCACHE_PORT=${MEMCACHE_PORT:-"11211"}
 
@@ -93,11 +96,11 @@ prepare() {
     SESSION_CONFIG="${MEMCACHE_HOST}:${MEMCACHE_PORT}"
   fi
 
-  if [ -z ${GRAPHITE_HOST} ]
+  if [ -z ${CARBON_HOST} ]
   then
-    GRAPHITE_PORT=
+    CARBON_PORT=
   else
-    GRAPHITE_HOST="${GRAPHITE_HOST}:${GRAPHITE_PORT}"
+    carbon_host="${CARBON_HOST}:${CARBON_PORT}"
   fi
 
   sed -i \
@@ -108,7 +111,7 @@ prepare() {
     -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
     -e 's|%SESSION_PROVIDER%|'${SESSION_PROVIDER}'|g' \
     -e 's|%SESSION_CONFIG%|'${SESSION_CONFIG}'|g' \
-    -e 's|%GRAPHITE_HOST%|'${GRAPHITE_HOST}'|g' \
+    -e 's|%GRAPHITE_HOST%|'${carbon_host}'|g' \
     ${GRAFANA_CONFIG_FILE}
 }
 
@@ -180,6 +183,7 @@ startGrafana() {
 
   sleep 5s
 
+  echo "done"
 }
 
 

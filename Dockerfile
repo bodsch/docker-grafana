@@ -3,7 +3,7 @@ FROM bodsch/docker-alpine-base:1610-02
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.7.1"
+LABEL version="1.7.2"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -23,7 +23,6 @@ RUN \
     git \
     mercurial \
     netcat-openbsd \
-    curl \
     pwgen \
     jq \
     yajl-tools \
