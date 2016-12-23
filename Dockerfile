@@ -8,8 +8,10 @@ LABEL version="1.7.3"
 # 3000: grafana (plain)
 EXPOSE 3000
 
-ENV GOPATH=/opt/go
-ENV GO15VENDOREXPERIMENT=0
+ENV \
+  GOPATH=/opt/go \
+  GO15VENDOREXPERIMENT=0 \
+  GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel"
 
 # ---------------------------------------------------------------------------------------
 
@@ -49,10 +51,10 @@ RUN \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-clock-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-piechart-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install jdbranham-diagram-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install mtanda-histogram-panel && \
+  for plugin in ${GRAFANA_PLUGINS} ; \
+  do \
+     /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
+  done && \
   npm uninstall -g grunt-cli && \
   npm cache clear && \
   go clean -i -r && \
