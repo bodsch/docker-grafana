@@ -1,9 +1,9 @@
 
-FROM bodsch/docker-alpine-base:1612-01
+FROM bodsch/docker-alpine-base:1701-02
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.7.3"
+LABEL version="1.8.0"
 
 # 3000: grafana (plain)
 EXPOSE 3000
@@ -63,6 +63,9 @@ RUN \
     nodejs \
     go \
     git \
+    jq \
+    yajl-tools \
+    bash \
     mercurial && \
   rm -rf \
     ${GOPATH} \
