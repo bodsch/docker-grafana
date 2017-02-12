@@ -6,27 +6,26 @@ A Docker container for an (currently) actual Grafana Webinterface build from Sou
 
 # Status
 
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=master)](https://travis-ci.org/bodsch/docker-grafana)
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1702-02)](https://travis-ci.org/bodsch/docker-grafana)
 
 
 # Build
 
 Your can use the included Makefile.
 
-To build the Container:
-    make
+To build the Container: ```make build```
 
-Starts the Container:
-    make run
+To remove the builded Docker Image: ```make clean```
 
-Starts the Container with Login Shell:
-    make shell
+Starts the Container: ```make run```
 
-Entering the Container:
-    make exec
+Starts the Container with Login Shell: ```make shell```
 
-Stop (but **not kill**):
-    make stop
+Entering the Container: ```make exec```
+
+Stop (but **not kill**): ```make stop```
+
+History ```make history```
 
 
 # Docker Hub
@@ -42,23 +41,23 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 `MYSQL_HOST` the MySQL Hostname
 
-`MYSQL_PORT` the MySQL Port (default: 3306)
+`MYSQL_PORT` the MySQL Port (default: ```3306```)
 
-`MYSQL_ROOT_USER` MySQL Root Username (default: root)
+`MYSQL_ROOT_USER` MySQL Root Username (default: ```root```)
 
 `MYSQL_ROOT_PASS` MySQL Root Password
 
 `GRAPHITE_HOST` the graphite Hostname
 
-`GRAPHITE_HTTP_PORT` the graphite HTTP Port (default: 8080)
+`GRAPHITE_HTTP_PORT` the graphite HTTP Port (default: ```8080```)
 
 `CARBON_HOST` the carbon Hostname to send internal Grafana metrics, can be identical with `GRAPHITE_HOST`
 
-`CARBON_PORT` the carbon Port (default: 2003)
+`CARBON_PORT` the carbon Port (default: ```2003```)
 
 `MEMCACHE_HOST` the memcache Hostname to store Sessions
 
-`MEMCACHE_PORT` the memcache Port (default: 11211)
+`MEMCACHE_PORT` the memcache Port (default: ```11211```)
 
 `DATABASE_GRAFANA_PASS` the Database Password for Grafana (default: grafana)
 
@@ -70,6 +69,7 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
      * grafana-piechart-panel
      * jdbranham-diagram-panel
      * mtanda-histogram-panel
+     * btplc-trend-box-panel
 
 
 # Ports
