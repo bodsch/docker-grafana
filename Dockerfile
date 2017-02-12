@@ -1,15 +1,16 @@
 
-FROM bodsch/docker-alpine-base:1610-02
+FROM bodsch/docker-alpine-base:1701-04
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1.7.2"
+LABEL version="1702-02"
 
-# 3000: grafana (plain)
+ENV \
+  GOPATH=/opt/go \
+  GO15VENDOREXPERIMENT=0 \
+  GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel"
+
 EXPOSE 3000
-
-ENV GOPATH=/opt/go
-ENV GO15VENDOREXPERIMENT=0
 
 # ---------------------------------------------------------------------------------------
 
@@ -49,10 +50,10 @@ RUN \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-clock-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install grafana-piechart-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install jdbranham-diagram-panel && \
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install mtanda-histogram-panel && \
+  for plugin in ${GRAFANA_PLUGINS} ; \
+  do \
+     /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
+  done && \
   npm uninstall -g grunt-cli && \
   npm cache clear && \
   go clean -i -r && \
@@ -61,13 +62,13 @@ RUN \
     nodejs \
     go \
     git \
+    bash \
     mercurial && \
   rm -rf \
     ${GOPATH} \
     /tmp/* \
     /var/cache/apk/* \
-    /root/.n* \
-    /usr/local/bin/phantomjs
+    /root/.n*
 
 COPY rootfs/ /
 
@@ -75,6 +76,6 @@ VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/
 
 WORKDIR /usr/share/grafana
 
-CMD /opt/startup.sh
+CMD [ "/opt/startup.sh" ]
 
 # EOF
