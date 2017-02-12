@@ -5,13 +5,12 @@ MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 LABEL version="1702-02"
 
-# 3000: grafana (plain)
-EXPOSE 3000
-
 ENV \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel"
+
+EXPOSE 3000
 
 # ---------------------------------------------------------------------------------------
 
@@ -69,8 +68,7 @@ RUN \
     ${GOPATH} \
     /tmp/* \
     /var/cache/apk/* \
-    /root/.n* \
-    /usr/local/bin/phantomjs
+    /root/.n*
 
 COPY rootfs/ /
 
