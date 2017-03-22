@@ -1,11 +1,14 @@
 
-FROM bodsch/docker-alpine-base:1701-04
+FROM golang:1.8-alpine
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1702-02"
+LABEL version="1703-03"
 
 ENV \
+  ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
+  ALPINE_VERSION="edge" \
+  TERM=xterm \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel"
@@ -20,7 +23,6 @@ RUN \
   apk --no-cache add \
     build-base \
     nodejs \
-    go \
     git \
     mercurial \
     netcat-openbsd \
@@ -28,26 +30,34 @@ RUN \
     jq \
     yajl-tools \
     mysql-client \
-    sqlite && \
+    sqlite \
+    supervisor
+
+RUN \
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  go run build.go latest && \
   echo "grafana setup .." && \
-  go run build.go setup > /dev/null 2> /dev/null && \
+  go run build.go setup  && \
   echo "grafana build .." && \
-  go run build.go build > /dev/null 2> /dev/null && \
+  go run build.go build
+
+RUN \
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   npm config set loglevel silent && \
-  npm update minimatch@3.0.2 && \
-  npm update graceful-fs@4.0.0 && \
-  npm update lodash@4.0.0 && \
-  npm update fsevents@latest && \
-  npm install   > /dev/null 2> /dev/null && \
-  npm run build > /dev/null 2> /dev/null && \
+  npm install         > /dev/null 2> /dev/null && \
+  npm install -g yarn > /dev/null 2> /dev/null && \
+  yarn install --pure-lockfile --no-progress > /dev/null 2> /dev/null && \
+  npm run build      > /dev/null 2> /dev/null
+
+RUN \
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
-  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/
+
+RUN \
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
   for plugin in ${GRAFANA_PLUGINS} ; \
@@ -68,7 +78,12 @@ RUN \
     ${GOPATH} \
     /tmp/* \
     /var/cache/apk/* \
-    /root/.n*
+    /root/.n* \
+    /root/.cache \
+    /root/.config \
+    /usr/local/go \
+    /usr/local/bin/go-wrapper \
+    /usr/lib/node_modules
 
 COPY rootfs/ /
 
@@ -76,6 +91,7 @@ VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/
 
 WORKDIR /usr/share/grafana
 
-CMD [ "/opt/startup.sh" ]
+#  CMD [ "/opt/startup.sh" ]
 
-# EOF
+
+CMD [ "/bin/sh" ]

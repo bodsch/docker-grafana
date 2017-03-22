@@ -6,7 +6,7 @@ A Docker container for an (currently) actual Grafana Webinterface build from Sou
 
 # Status
 
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1702-02)](https://travis-ci.org/bodsch/docker-grafana)
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1703-03)](https://travis-ci.org/bodsch/docker-grafana)
 
 
 # Build
@@ -74,6 +74,3 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 # Ports
  - 3000: grafana (plain)
-
-
-
