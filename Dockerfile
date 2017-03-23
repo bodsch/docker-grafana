@@ -18,10 +18,11 @@ EXPOSE 3000
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk --no-cache update && \
-  apk --no-cache upgrade && \
-  apk --no-cache add \
+  apk --quiet --no-cache update && \
+  apk --quiet --no-cache upgrade && \
+  apk --quiet --no-cache add \
     build-base \
+    curl \
     nodejs \
     git \
     mercurial \
@@ -31,39 +32,43 @@ RUN \
     yajl-tools \
     mysql-client \
     sqlite \
-    supervisor
+    supervisor && \
 
-RUN \
+  # build grafana
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   echo "grafana setup .." && \
   go run build.go setup  && \
   echo "grafana build .." && \
-  go run build.go build
+  go run build.go build && \
 
-RUN \
+  # build frontend
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   npm config set loglevel silent && \
   npm install         > /dev/null 2> /dev/null && \
   npm install -g yarn > /dev/null 2> /dev/null && \
   yarn install --pure-lockfile --no-progress > /dev/null 2> /dev/null && \
-  npm run build      > /dev/null 2> /dev/null
+  npm run build      > /dev/null 2> /dev/null && \
 
-RUN \
+  # move all packages to the right place
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
-  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/
+  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
 
-RUN \
+  # create needed directorys
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
+
+  # install my favorite grafana plugins
   for plugin in ${GRAFANA_PLUGINS} ; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
   done && \
+
+  # and clean up
   npm uninstall -g grunt-cli && \
   npm cache clear && \
   go clean -i -r && \
@@ -91,7 +96,4 @@ VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/
 
 WORKDIR /usr/share/grafana
 
-#  CMD [ "/opt/startup.sh" ]
-
-
-CMD [ "/bin/sh" ]
+CMD [ "/opt/startup.sh" ]
