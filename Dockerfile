@@ -1,74 +1,102 @@
 
-FROM bodsch/docker-alpine-base:1701-04
+FROM bodsch/docker-golang:1.8
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1702-02"
+LABEL version="1704-02"
 
 ENV \
+  ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
+  ALPINE_VERSION="edge" \
+  TERM=xterm \
+  BUILD_DATE="2017-04-17" \
+  GRAFANA_VERSION="4.3.0-pre1" \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
-  GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel"
+  GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
+  APK_ADD="build-base ca-certificates curl jq git mysql-client netcat-openbsd nodejs pwgen supervisor sqlite yajl-tools" \
+  APK_DEL="build-base git nodejs"
 
 EXPOSE 3000
+
+LABEL org.label-schema.build-date=${BUILD_DATE} \
+      org.label-schema.name="Grafana Docker Image" \
+      org.label-schema.description="Inofficial Grafana Docker Image" \
+      org.label-schema.url="https://www.grafana.com" \
+      org.label-schema.vcs-url="https://github.com/bodsch/docker-grafana" \
+      org.label-schema.vendor="Bodo Schulz" \
+      org.label-schema.version=${GRAFANA_VERSION} \
+      org.label-schema.schema-version="1.0" \
+      com.microscaling.docker.dockerfile="/Dockerfile" \
+      com.microscaling.license="GNU Lesser General Public License v3.0"
 
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk --no-cache update && \
-  apk --no-cache upgrade && \
-  apk --no-cache add \
-    build-base \
-    nodejs \
-    go \
-    git \
-    mercurial \
-    netcat-openbsd \
-    pwgen \
-    jq \
-    yajl-tools \
-    mysql-client \
-    sqlite && \
+  apk --quiet --no-cache update && \
+  apk --quiet --no-cache upgrade && \
+  for apk in ${APK_ADD} ; \
+  do \
+    apk --quiet --no-cache add ${apk} ; \
+  done && \
+
+  # build grafana
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  go run build.go latest && \
   echo "grafana setup .." && \
-  go run build.go setup > /dev/null 2> /dev/null && \
+  go run build.go setup  && \
   echo "grafana build .." && \
-  go run build.go build > /dev/null 2> /dev/null && \
+  go run build.go build && \
+
+  # build frontend
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   npm config set loglevel silent && \
-  npm update minimatch@3.0.2 && \
-  npm update graceful-fs@4.0.0 && \
-  npm update lodash@4.0.0 && \
-  npm update fsevents@latest && \
-  npm install   > /dev/null 2> /dev/null && \
-  npm run build > /dev/null 2> /dev/null && \
+  npm install         > /dev/null 2> /dev/null && \
+  npm install -g yarn > /dev/null 2> /dev/null && \
+  yarn install --pure-lockfile --no-progress > /dev/null 2> /dev/null && \
+  npm run build      > /dev/null 2> /dev/null && \
+
+  # move all packages to the right place
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+
+  # create needed directorys
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
+
+  # install my favorite grafana plugins
   for plugin in ${GRAFANA_PLUGINS} ; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
   done && \
+
+  # and clean up
   npm uninstall -g grunt-cli && \
   npm cache clear && \
   go clean -i -r && \
   apk del --purge \
     build-base \
     nodejs \
-    go \
     git \
     bash \
     mercurial && \
   rm -rf \
     ${GOPATH} \
+    /usr/lib/go \
+    /usr/bin/go \
+    /usr/bin/gofmt \
     /tmp/* \
     /var/cache/apk/* \
-    /root/.n*
+    /root/.n* \
+    /root/.cache \
+    /root/.config \
+    /usr/local/go \
+    /usr/local/bin/go-wrapper \
+    /usr/lib/node_modules
 
 COPY rootfs/ /
 
@@ -77,5 +105,3 @@ VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/
 WORKDIR /usr/share/grafana
 
 CMD [ "/opt/startup.sh" ]
-
-# EOF

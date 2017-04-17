@@ -165,6 +165,7 @@ startGrafana() {
 
   waitForDatabase
 
+  echo "start grafana-server in first time"
   exec /usr/share/grafana/bin/grafana-server -homepath /usr/share/grafana  -config=${GRAFANA_CONFIG_FILE} cfg:default.paths.logs=/var/log/grafana &
 
   if [ $? -eq 0 ]
@@ -172,6 +173,7 @@ startGrafana() {
     echo "successful ..."
   else
     echo "result code: $?"
+    exit 1
   fi
 
   echo "wait for initalize grafana .. "
