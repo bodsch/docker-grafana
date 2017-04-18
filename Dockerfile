@@ -9,7 +9,7 @@ ENV \
   ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
   ALPINE_VERSION="edge" \
   TERM=xterm \
-  BUILD_DATE="2017-04-17" \
+  BUILD_DATE="2017-04-18" \
   GRAFANA_VERSION="4.3.0-pre1" \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
@@ -50,11 +50,11 @@ RUN \
 
   # build frontend
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  npm config set loglevel silent && \
-  npm install         > /dev/null 2> /dev/null && \
-  npm install -g yarn > /dev/null 2> /dev/null && \
-  yarn install --pure-lockfile --no-progress > /dev/null 2> /dev/null && \
-  npm run build      > /dev/null 2> /dev/null && \
+  /usr/bin/npm config set loglevel silent && \
+  /usr/bin/npm install          && \
+  /usr/bin/npm install -g yarn  && \
+  yarn install --pure-lockfile --no-progress  && \
+  /usr/bin/npm run build        && \
 
   # move all packages to the right place
   cd ${GOPATH}/src/github.com/grafana/grafana && \
@@ -75,15 +75,14 @@ RUN \
   done && \
 
   # and clean up
-  npm uninstall -g grunt-cli && \
-  npm cache clear && \
+  /usr/bin/npm uninstall -g grunt-cli && \
+  /usr/bin/npm uninstall -g yarn && \
+  /usr/bin/npm cache clear && \
   go clean -i -r && \
-  apk del --purge \
-    build-base \
-    nodejs \
-    git \
-    bash \
-    mercurial && \
+  for apk in ${APK_DEL} ; \
+  do \
+    apk del --quiet --purge ${apk} ; \
+  done && \
   rm -rf \
     ${GOPATH} \
     /usr/lib/go \
