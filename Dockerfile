@@ -7,7 +7,7 @@ LABEL version="1704-02"
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2017-04-178 \
+  BUILD_DATE="2017-04-18" \
   GRAFANA_VERSION="4.3.0-pre1" \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
