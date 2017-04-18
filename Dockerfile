@@ -6,10 +6,8 @@ MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 LABEL version="1704-02"
 
 ENV \
-  ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
-  ALPINE_VERSION="edge" \
   TERM=xterm \
-  BUILD_DATE="2017-04-18" \
+  BUILD_DATE="2017-04-178 \
   GRAFANA_VERSION="4.3.0-pre1" \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
@@ -38,24 +36,27 @@ RUN \
   for apk in ${APK_ADD} ; \
   do \
     apk --quiet --no-cache add ${apk} ; \
-  done && \
+  done
 
+RUN \
   # build grafana
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   echo "grafana setup .." && \
   go run build.go setup  && \
   echo "grafana build .." && \
-  go run build.go build && \
+  go run build.go build
 
+RUN \
   # build frontend
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   /usr/bin/npm config set loglevel silent && \
   /usr/bin/npm install          && \
   /usr/bin/npm install -g yarn  && \
   yarn install --pure-lockfile --no-progress  && \
-  /usr/bin/npm run build        && \
+  /usr/bin/npm run build
 
+RUN \
   # move all packages to the right place
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
@@ -66,15 +67,18 @@ RUN \
 
   # create needed directorys
   mkdir /var/log/grafana && \
-  mkdir /var/log/supervisor && \
+  mkdir /var/log/supervisor
 
+RUN \
   # install my favorite grafana plugins
   for plugin in ${GRAFANA_PLUGINS} ; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
-  done && \
+  done
 
+RUN \
   # and clean up
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   /usr/bin/npm uninstall -g grunt-cli && \
   /usr/bin/npm uninstall -g yarn && \
   /usr/bin/npm cache clear && \
