@@ -3,13 +3,13 @@ FROM bodsch/docker-golang:1704-03
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1704-04"
+LABEL version="1705-01"
 
 ENV \
   ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
   ALPINE_VERSION="v3.5" \
   TERM=xterm \
-  BUILD_DATE="2017-04-23" \
+  BUILD_DATE="2017-05-01" \
   GRAFANA_VERSION="4.3.0-pre1" \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
@@ -50,7 +50,7 @@ RUN \
   go run build.go build && \
   # build frontend
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  /usr/bin/npm config set loglevel verbose && \
+  /usr/bin/npm config set loglevel silent && \
   /usr/bin/npm install          && \
   /usr/bin/npm install -g yarn  && \
   yarn install --pure-lockfile --no-progress && \
