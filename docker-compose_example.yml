@@ -1,0 +1,39 @@
+---
+version: '2.0'
+
+volumes:
+  database:
+
+
+services:
+
+  grafana:
+    build: .
+    container_name: "grafana"
+    hostname: "grafana.matrix.lan"
+    ports:
+      - "3000:3000"
+    extends:
+      file: environment.yml
+      service: grafana
+    depends_on:
+      - database
+    links:
+      - database
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /tmp/docker-data/icinga2-master:/srv
+
+  # the first icinga2 satellite
+  # ask the master above for an certificate
+  database:
+    restart: always
+    image: bodsch/docker-mysql:1705-01
+    container_name: "database"
+    hostname: "database.matrix.lan"
+    extends:
+      file: environment.yml
+      service: database
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - database:/srv

@@ -1,0 +1,39 @@
+---
+# environment variables for all services that need this
+# all commented out vars are set into the containers with the correct value
+# they are only examples and documentation
+
+version: '2.0'
+
+services:
+
+  database:
+    environment:
+      # MYSQL_SYSTEM_USER:
+      MYSQL_ROOT_PASS: database.pass
+
+  grafana:
+    environment:
+      DEBUG: 1
+      URL_PATH: /
+      ORGANISATION: Docker
+      DATABASE_TYPE: mysql
+      MYSQL_HOST: database
+      # MYSQL_PORT: 3306
+      # MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASS: database.pass
+      GRAPHITE_HOST: graphite
+      # GRAPHITE_PORT: 2003
+      # GRAPHITE_HTTP_PORT: 8080
+      #
+      # WE USE AN SEPERATE CARBON SERVICE
+      # IF NOT, THEN SET THEN TO $GRAPHITE_HOST
+      # (see above in this configuration part!)
+      # CARBON_HOST: carbon
+      # CARBON_PORT: 2003
+      # MEMCACHE_HOST: memcached
+      # MEMCACHE_PORT: 11211
+      # REDIS_HOST: redis
+      # REDIS_PORT: 6379
+      # DATABASE_GRAFANA_PASS: grafana
+

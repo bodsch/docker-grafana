@@ -1,16 +1,16 @@
-var fs = require('fs');
+var fs   = require('fs');
 var http = require('http');
-var ini = require('ini');
+var ini  = require('ini');
 var chokidar = require('chokidar');
 
 var noop = function(d){};
 
-var default_config = ini.parse(fs.readFileSync('/opt/grafana/conf/defaults.ini', 'utf-8'));
-var custom_config = ini.parse(fs.readFileSync('/opt/grafana/conf/custom.ini', 'utf-8'));
+var default_config = ini.parse(fs.readFileSync('/usr/share/grafana/conf/defaults.ini', 'utf-8'));
+var custom_config  = ini.parse(fs.readFileSync('/etc/grafana/grafana.ini', 'utf-8'));
 
-var user = custom_config.security.admin_user || default_config.security.admin_user;
+var user     = custom_config.security.admin_user || default_config.security.admin_user;
 var password = custom_config.security.admin_password || default_config.security.admin_password;
-var cookies = [];
+var cookies  = [];
 var watcher;
 var file_name_to_slug = {};
 
@@ -55,14 +55,14 @@ var upsertDashboard = function(dashboard_data, callback) {
           setTimeout(function() {
             upsertDashboard(dashboard_data, callback);
           }, 1000);
-      } 
-      
+      }
+
   });
-  
+
   update_request.on('error', function(e) {
     console.log('Error trying to create/update the [' + dashboard_data.title + '] dashboard: ' + e);
   });
-  
+
   update_request.write(JSON.stringify({dashboard:dashboard_data, overwrite: true}));
   update_request.end();
 }
@@ -91,13 +91,13 @@ var dashboardExists = function(slug, callback) {
             dashboardExists(slug, callback);
           });
           break;
-      } 
+      }
   });
-  
+
   get_request.on('error', function(e) {
     console.log('Error trying to verify the existence of the dashboard with slug ' + slug + ': ' + e);
   });
-  
+
   get_request.end();
 }
 
@@ -120,14 +120,14 @@ var deleteDashboard = function(slug) {
             deleteDashboard(slug);
           });
           break;
-      } 
-      
+      }
+
   });
-  
+
   delete_request.on('error', function(e) {
     console.log('Error trying to delete the dashboard with slug ' + slug + ': ' + e);
   });
-  
+
   delete_request.end();
 }
 
