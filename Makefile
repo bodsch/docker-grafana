@@ -51,6 +51,13 @@ run:
 		$(ENV) \
 		$(NS)/$(REPO):$(VERSION)
 
+exec:
+	docker exec \
+		--interactive \
+		--tty \
+		$(NAME)-$(INSTANCE) \
+		/bin/sh
+
 start:
 	docker run \
 		--detach \
