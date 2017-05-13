@@ -3,14 +3,14 @@ FROM bodsch/docker-golang:1.8
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1705-01"
+LABEL version="1705-03.dev"
 
 ENV \
   ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
   ALPINE_VERSION="v3.5" \
   TERM=xterm \
-  BUILD_DATE="2017-05-01" \
-  GRAFANA_VERSION="4.3.0-pre1" \
+  BUILD_DATE="2017-05-13" \
+  GRAFANA_VERSION="4.3.0-beta1" \
   GOPATH=/opt/go \
   GO15VENDOREXPERIMENT=0 \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
