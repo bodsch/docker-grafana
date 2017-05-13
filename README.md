@@ -6,9 +6,9 @@ A Docker container for an (currently) actual Grafana Webinterface build from Sou
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1705-01)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1705-01)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1705-01)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1705-03)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1705-03)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1705-03)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-grafana/
 [microbadger]: https://microbadger.com/images/bodsch/docker-grafana
