@@ -1,42 +1,75 @@
 
-FROM bodsch/docker-golang:1.8
+FROM alpine:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
-LABEL version="1705-03.dev"
-
 ENV \
   ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
-  ALPINE_VERSION="v3.5" \
+  ALPINE_VERSION="latest" \
+  GOLANG_VERSION="1.8.1" \
+  GOPATH=/opt/go \
+  GOROOT=/usr/lib/go \
   TERM=xterm \
   BUILD_DATE="2017-05-13" \
   GRAFANA_VERSION="4.3.0-beta1" \
-  GOPATH=/opt/go \
-  GO15VENDOREXPERIMENT=0 \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
+  APK_ADD_GO_BUILD="ca-certificates bash curl gcc musl-dev openssl go" \
   APK_ADD="build-base ca-certificates curl jq git mysql-client netcat-openbsd nodejs-current pwgen supervisor sqlite yajl-tools" \
   APK_DEL="build-base git nodejs-current"
 
 EXPOSE 3000
 
-LABEL org.label-schema.build-date=${BUILD_DATE} \
-      org.label-schema.name="Grafana Docker Image" \
-      org.label-schema.description="Inofficial Grafana Docker Image" \
-      org.label-schema.url="https://www.grafana.com" \
-      org.label-schema.vcs-url="https://github.com/bodsch/docker-grafana" \
-      org.label-schema.vendor="Bodo Schulz" \
-      org.label-schema.version=${GRAFANA_VERSION} \
-      org.label-schema.schema-version="1.0" \
-      com.microscaling.docker.dockerfile="/Dockerfile" \
-      com.microscaling.license="GNU Lesser General Public License v3.0"
+LABEL \
+  version="1705-03.dev" \
+  org.label-schema.build-date=${BUILD_DATE} \
+  org.label-schema.name="Grafana Docker Image" \
+  org.label-schema.description="Inofficial Grafana Docker Image" \
+  org.label-schema.url="https://www.grafana.com" \
+  org.label-schema.vcs-url="https://github.com/bodsch/docker-grafana" \
+  org.label-schema.vendor="Bodo Schulz" \
+  org.label-schema.version=${GRAFANA_VERSION} \
+  org.label-schema.schema-version="1.0" \
+  com.microscaling.docker.dockerfile="/Dockerfile" \
+  com.microscaling.license="GNU Lesser General Public License v3.0"
 
 # ---------------------------------------------------------------------------------------
+# https://golang.org/issue/14851
+COPY no-pic.patch /
 
 RUN \
-  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
-  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
-  apk --quiet --no-cache update && \
-  apk --quiet --no-cache upgrade && \
+  apk --no-cache update && \
+  apk --no-cache upgrade && \
+  for apk in ${APK_ADD_GO_BUILD} ; \
+  do \
+    apk --no-cache add --virtual go-build-deps ${apk}; \
+  done && \
+  # build go-1.8
+  export GOROOT_BOOTSTRAP="$(go env GOROOT)" && \
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    "https://golang.org/dl/go${GOLANG_VERSION}.src.tar.gz" \
+  | gunzip \
+  | tar x -C /usr/local && \
+  cd /usr/local/go/src && \
+  patch -p2 -i /no-pic.patch && \
+  ./make.bash && \
+  rm -rf /*.patch && \
+  apk --purge del \
+    go-build-deps && \
+  mkdir /usr/lib/go && \
+  mv  /usr/local/go/bin       /usr/lib/go/ && \
+  mv  /usr/local/go/lib       /usr/lib/go/ && \
+  mv  /usr/local/go/pkg       /usr/lib/go/ && \
+  mv  /usr/local/go/src       /usr/lib/go/ && \
+  ln -s /usr/lib/go/bin/go    /usr/bin/go && \
+  ln -s /usr/lib/go/bin/gofmt /usr/bin/gofmt && \
+  rm -rf /usr/local/go && \
+  unset GOROOT_BOOTSTRAP && \
+  #
+  # build and install grafana
+  #
   for apk in ${APK_ADD} ; \
   do \
     apk --quiet --no-cache add ${apk} ; \
@@ -89,6 +122,8 @@ RUN \
     /root/.n* \
     /root/.cache \
     /root/.config \
+    /usr/local/share/.cache \
+    /usr/local/share/.config \
     /usr/local/go \
     /usr/local/bin/go-wrapper \
     /usr/lib/node_modules
