@@ -20,7 +20,7 @@ ENV \
 EXPOSE 3000
 
 LABEL \
-  version="1705-03.dev" \
+  version="1705-04" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
