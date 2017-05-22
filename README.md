@@ -6,9 +6,9 @@ A Docker container for an (currently) actual Grafana Webinterface build from Sou
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1705-03)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1705-03)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1705-03)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1705-04)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1705-04)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1705-04)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-grafana/
 [microbadger]: https://microbadger.com/images/bodsch/docker-grafana
@@ -86,7 +86,7 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 `MEMCACHE_PORT` the memcache Port (default: `11211`)
 
-`DATABASE_GRAFANA_PASS` the Database Password for Grafana (default: grafana)
+`DATABASE_GRAFANA_PASS` the Database Password for Grafana (default: `grafana`)
 
 
 # includes
@@ -101,4 +101,4 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 # Ports
 
- - 3000: grafana (plain)
+ - `3000`: grafana (plain)
