@@ -10,7 +10,7 @@ ENV \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
   TERM=xterm \
-  BUILD_DATE="2017-05-13" \
+  BUILD_DATE="2017-05-22" \
   GRAFANA_VERSION="4.3.0-beta1" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
   APK_ADD_GO_BUILD="ca-certificates bash curl gcc musl-dev openssl go" \
