@@ -74,6 +74,8 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 `MYSQL_ROOT_PASS` MySQL Root Password
 
+`SQLITE_PATH` set the Storage-Path for a `sqlite` Database
+
 `GRAPHITE_HOST` the graphite Hostname
 
 `GRAPHITE_HTTP_PORT` the graphite HTTP Port (default: `8080`)

@@ -1,27 +1,29 @@
 
-FROM alpine:latest
+FROM alpine:3.5
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
-  ALPINE_MIRROR="dl-cdn.alpinelinux.org" \
-  ALPINE_VERSION="latest" \
+  ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
+  ALPINE_VERSION="v3.5" \
   GOLANG_VERSION="1.8.2" \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
+  GOMAXPROCS=6 \
   TERM=xterm \
-  BUILD_DATE="2017-05-24" \
+  BUILD_DATE="2017-05-27" \
   GRAFANA_VERSION="4.4.0-pre1" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_BUILD_GO="ca-certificates bash curl gcc musl-dev openssl go" \
+  APK_BUILD_GO="ca-certificates bash gcc musl-dev openssl go" \
+  # with alpine 3.6, we need add 'nodejs-current-npm'!
   APK_ADD="build-base ca-certificates curl jq git mysql-client netcat-openbsd nodejs-current pwgen supervisor sqlite yajl-tools" \
   APK_DEL="build-base git nodejs-current"
 
 EXPOSE 3000
 
 LABEL \
-  version="1705-04" \
+  version="1705-04.4" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
@@ -38,12 +40,18 @@ LABEL \
 COPY build /build
 
 RUN \
+  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
+  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
   apk --quiet --no-cache update && \
   apk --quiet --no-cache upgrade && \
 
   #
   # build packages
   #
+  for apk in ${APK_ADD} ; \
+  do \
+    apk --quiet --no-cache add ${apk} ; \
+  done && \
   for apk in ${APK_BUILD_GO} ; \
   do \
     apk --quiet --no-cache add --virtual build-deps ${apk} ; \
@@ -61,10 +69,10 @@ RUN \
   | tar x -C / && \
   ln -s /phantomjs/phantomjs /usr/bin/ && \
 
-  #
   # build go-1.8
   #
   export GOROOT_BOOTSTRAP="$(go env GOROOT)" && \
+  export GOMAXPROCS=${GOMAXPROCS} && \
   curl \
     --silent \
     --location \
@@ -77,7 +85,7 @@ RUN \
   cd /usr/local/go/src && \
   patch -p2 -i /build/no-pic.patch && \
   ./make.bash && \
-  apk --purge del \
+  apk --quiet --purge del \
     build-deps && \
   mkdir /usr/lib/go && \
   mv  /usr/local/go/bin       /usr/lib/go/ && \
@@ -89,21 +97,16 @@ RUN \
   rm -rf /usr/local/go && \
   unset GOROOT_BOOTSTRAP && \
 
-  #
   # build and install grafana
   #
-  for apk in ${APK_ADD} ; \
-  do \
-    apk --quiet --no-cache add ${apk} ; \
-  done && \
-  # build grafana
-  #
+  echo "get grafana sources ..." && \
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   echo "grafana setup .." && \
   go run build.go setup  && \
   echo "grafana build .." && \
   go run build.go build && \
+  unset GOMAXPROCS && \
 
   # build frontend
   #
@@ -111,7 +114,7 @@ RUN \
   /usr/bin/npm config set loglevel silent && \
   /usr/bin/npm install          && \
   /usr/bin/npm install -g yarn  && \
-  yarn install --pure-lockfile --no-progress && \
+  /usr/bin/yarn install --pure-lockfile --no-progress && \
   /usr/bin/npm run build && \
 
   # move all packages to the right place
@@ -140,11 +143,13 @@ RUN \
   /usr/bin/npm uninstall -g grunt-cli && \
   /usr/bin/npm uninstall -g yarn && \
   /usr/bin/npm cache clear && \
+
   go clean -i -r && \
   for apk in ${APK_DEL} ; \
   do \
-    apk del --quiet --purge ${apk} ; \
+    apk --quiet --purge del ${apk} ; \
   done && \
+
   rm -rf \
     ${GOPATH} \
     /build \
