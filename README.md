@@ -3,12 +3,14 @@ docker-grafana
 
 A Docker container for an (currently) actual Grafana Webinterface build from Source.
 
+this container includes an update of golang to version 1.8.3,
+use phantomjs from [Overbryd](https://github.com/Overbryd/docker-phantomjs-alpine) and nodejs in version 1.8.3
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1705-04)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1705-04)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1705-04)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1707-27.4)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1707-27.4)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1707-27.4)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-grafana/
 [microbadger]: https://microbadger.com/images/bodsch/docker-grafana
