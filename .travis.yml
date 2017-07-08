@@ -1,5 +1,5 @@
 sudo: required
-#group: deprecated-2017Q2
+group: deprecated-2017Q2
 
 services:
   - docker
@@ -8,7 +8,7 @@ before_install:
   - docker pull alpine:3.6
 
 install:
-  - travis_retry docker build --tag bodsch/docker-grafana .
+  - travis_wait docker build --tag bodsch/docker-grafana .
   - docker run --detach --name grafana bodsch/docker-grafana
 
 script:

@@ -42,7 +42,7 @@ RUN \
   #
   # build packages
   #
-  apk --quiet --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
+  apk --verbose --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
   #
