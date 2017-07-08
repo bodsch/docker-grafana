@@ -37,12 +37,12 @@ RUN \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/edge/community"              >> /etc/apk/repositories && \
-  apk --quiet --no-cache update && \
-  apk --quiet --no-cache upgrade && \
+  apk --no-cache update && \
+  apk --no-cache upgrade && \
   #
   # build packages
   #
-  apk --verbose --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
+  apk --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
   #

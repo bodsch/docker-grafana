@@ -8,7 +8,7 @@ before_install:
   - docker pull alpine:3.6
 
 install:
-  - travis_wait docker build --tag bodsch/docker-grafana .
+  - travis_wait 30 docker build --tag bodsch/docker-grafana .
   - docker run --detach --name grafana bodsch/docker-grafana
 
 script:
