@@ -8,7 +8,8 @@ before_install:
   - docker pull alpine:3.6
 
 install:
-  - echo "install nothing!" # put your normal pre-testing installs here
+  - travis_retry 5 docker build --tag bodsch/docker-grafana .
+  - docker run --detach --name grafana bodsch/docker-grafana
 
 script:
   - docker ps | grep -q grafana
@@ -23,8 +24,6 @@ after_success:
   - echo "#### Build successful; Disk usage after running script:";
   - df -h;
   - du . | sort -nr | head -n100
-  - travis_retry 5 docker build --tag bodsch/docker-grafana .
-  - docker run --detach --name grafana bodsch/docker-grafana
 
 after_failure:
   - echo "#### Build failed; Disk usage after running script:";
