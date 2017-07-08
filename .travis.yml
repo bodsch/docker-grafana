@@ -1,5 +1,10 @@
 sudo: required
-group: deprecated-2017Q2
+# dist: trusty
+
+group: edge
+
+# sudo: required
+# group: deprecated-2017Q2
 
 services:
   - docker
