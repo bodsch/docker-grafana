@@ -3,12 +3,13 @@ docker-grafana
 
 A Docker container for an (currently) actual Grafana Webinterface build from Source.
 
+this container use phantomjs from [Overbryd](https://github.com/Overbryd/docker-phantomjs-alpine)
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1705-04)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1705-04)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1705-04)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1707-27.4)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1707-27.4)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1707-27.4)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-grafana/
 [microbadger]: https://microbadger.com/images/bodsch/docker-grafana
@@ -73,6 +74,8 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 `MYSQL_ROOT_USER` MySQL Root Username (default: `root`)
 
 `MYSQL_ROOT_PASS` MySQL Root Password
+
+`SQLITE_PATH` set the Storage-Path for a `sqlite` Database
 
 `GRAPHITE_HOST` the graphite Hostname
 

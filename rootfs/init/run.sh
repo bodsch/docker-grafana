@@ -2,14 +2,9 @@
 #
 #
 
-if [ ${DEBUG} ]
-then
-  set -x
-fi
-
 ORGANISATION=${ORGANISATION:-"Docker"}
 
-URL_PATH=${URL_PATH:-"/grafana/"}
+URL_PATH=${URL_PATH:-"/"}
 
 DATABASE_TYPE=${DATABASE_TYPE:-sqlite3}
 
@@ -17,6 +12,8 @@ MYSQL_HOST=${MYSQL_HOST:-""}
 MYSQL_PORT=${MYSQL_PORT:-"3306"}
 MYSQL_ROOT_USER=${MYSQL_ROOT_USER:-"root"}
 MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
+
+SQLITE_PATH=${SQLITE_PATH:-""}
 
 GRAPHITE_HOST=${GRAPHITE_HOST:-""}
 GRAPHITE_PORT=${GRAPHITE_PORT:-2003}
@@ -46,6 +43,14 @@ prepare() {
   if [ "${DATABASE_TYPE}" == "sqlite3" ]
   then
     DBA_TYPE=sqlite3
+    MYSQL_PORT=
+
+    i=$((${#SQLITE_PATH}-1))
+
+    if ( [ ${i} -gt 1 ] && [ "${SQLITE_PATH:$i:1}" != "/" ] )
+    then
+      SQLITE_PATH="${SQLITE_PATH}/"
+    fi
 
   elif [ "${DATABASE_TYPE}" == "mysql" ]
   then
@@ -83,6 +88,7 @@ prepare() {
     -e 's|%SESSION_CONFIG%|'${SESSION_CONFIG}'|g' \
     -e 's|%CARBON_HOST%|'${carbon_host}'|g' \
     -e 's|%ORGANISATION%|'${ORGANISATION}'|g' \
+    -e 's|%SQLITE_PATH%|'${SQLITE_PATH}'|g' \
     ${GRAFANA_CONFIG_FILE}
 }
 
@@ -109,20 +115,6 @@ run() {
 
   . /init/database/mysql.sh
   . /init/configure_grafana.sh
-
-#   echo -e "\n"
-#   echo " ==================================================================="
-#   echo " Grafana Database User 'grafana' password set to '${DBA_PASS}'"
-#   echo " Grafana Organisation set to '${ORGANISATION}'"
-#   echo ""
-#   echo " You can use the Basic Auth Method to access the ReST-API:"
-#   echo "   curl http://admin:admin@localhost:3000/api/org"
-#   echo "   curl http://admin:admin@localhost:3000/api/datasources' -X POST -H 'Content-Type: application/json;charset=UTF-8' \\"
-#   echo "      --data-binary '{"name":"localGraphite","type":"graphite","url":"http://192.168.99.100","access":"proxy","isDefault":false,"database":"asd"}'"
-#   echo "   curl -X GET http://admin:admin@localhost:3000/api/search?query= | json_reformat"
-#   echo "   curl -X DELETE http://admin:admin@localhost:3000/api/dashboards/db/${DASHBOARD}"
-#   echo " ==================================================================="
-#   echo ""
 
   startSupervisor
 }
