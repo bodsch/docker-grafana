@@ -1,11 +1,11 @@
-sudo: false
-group: deprecated-2017Q2
+#sudo: false
+#group: deprecated-2017Q2
 
 services:
   - docker
 
 install:
-  - docker build --tag bodsch/docker-grafana .
+  - travis_retry docker build --tag bodsch/docker-grafana .
   - docker run --detach --name grafana bodsch/docker-grafana
 
 script:
