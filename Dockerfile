@@ -13,13 +13,13 @@ ENV \
   GRAFANA_VERSION="5.0.0-pre1" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_ADD="build-base ca-certificates curl jq git mysql-client netcat-openbsd  pwgen supervisor sqlite yajl-tools" \
-  APK_BUILD_BASE="bash build-base git musl-dev openssl go nodejs-current nodejs-current-npm"
+  APK_ADD="ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
+  APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
 
 EXPOSE 3000
 
 LABEL \
-  version="1707-27.5" \
+  version="1707-27.4" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
@@ -37,12 +37,12 @@ RUN \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/edge/community"              >> /etc/apk/repositories && \
-  apk update && \
-  apk upgrade && \
+  apk --quiet --no-cache update && \
+  apk --quiet --no-cache upgrade && \
   #
   # build packages
   #
-  apk add ${APK_ADD} ${APK_BUILD_BASE} && \
+  apk --quiet --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
   #
@@ -93,6 +93,7 @@ RUN \
   #
   # install my favorite grafana plugins
   #
+  echo "install grafana plugins ..." && \
   for plugin in ${GRAFANA_PLUGINS} ; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \

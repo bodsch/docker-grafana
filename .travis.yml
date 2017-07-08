@@ -1,8 +1,11 @@
-#sudo: false
+sudo: required
 #group: deprecated-2017Q2
 
 services:
   - docker
+
+before_install:
+  - docker pull alpine:3.6
 
 install:
   - travis_retry docker build --tag bodsch/docker-grafana .
@@ -11,3 +14,6 @@ install:
 script:
   - docker ps | grep -q grafana
 
+notifications:
+  email:
+    - bodo@boone-schulz.de
