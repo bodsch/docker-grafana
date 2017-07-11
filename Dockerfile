@@ -9,7 +9,7 @@ ENV \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
   TERM=xterm \
-  BUILD_DATE="2017-07-08" \
+  BUILD_DATE="2017-07-11" \
   GRAFANA_VERSION="5.0.0-pre1" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
@@ -19,7 +19,7 @@ ENV \
 EXPOSE 3000
 
 LABEL \
-  version="1707-27.4" \
+  version="1707-28" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \

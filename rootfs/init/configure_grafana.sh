@@ -24,7 +24,7 @@ startGrafana() {
 
   echo " [i] wait for initalize grafana .. "
 
-  RETRY=15
+  RETRY=35
 
   # wait for grafana
   #
@@ -34,11 +34,17 @@ startGrafana() {
 
     [ $? -eq 0 ] && break
 
-    echo " [i] Waiting for grafana to come up"
+    echo " [i] waiting for grafana to come up"
 
     sleep 5s
     RETRY=$(expr ${RETRY} - 1)
   done
+
+  if [ $RETRY -le 0 ]
+  then
+    echo " [E] grafana is not successful started :("
+    exit 1
+  fi
 
   sleep 5s
 
