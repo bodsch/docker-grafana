@@ -24,19 +24,21 @@ startGrafana() {
 
   echo " [i] wait for initalize grafana .. "
 
-  RETRY=35
+  sleep 2s
+
+  RETRY=40
 
   # wait for grafana
   #
   until [ ${RETRY} -le 0 ]
   do
-    nc localhost 3000 < /dev/null > /dev/null
+    grafana_up=$(netstat -tlnp | grep ":3000" | wc -l)
 
-    [ $? -eq 0 ] && break
+    [ ${grafana_up} -eq 1 ] && break
 
     echo " [i] waiting for grafana to come up"
 
-    sleep 5s
+    sleep 2s
     RETRY=$(expr ${RETRY} - 1)
   done
 
@@ -110,6 +112,7 @@ handleDataSources() {
       default=$(echo ${data} | jq --raw-output '.isDefault')
 
       curl ${curl_opts} \
+        --silent \
         --request PUT \
         --header 'Content-Type: application/json;charset=UTF-8' \
         --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
@@ -139,6 +142,7 @@ handleDataSources() {
         /init/config/template/datasource-${i}.json
 
       curl ${curl_opts} \
+        --silent \
         --request POST \
         --header 'Content-Type: application/json;charset=UTF-8' \
         --data-binary @/init/config/template/datasource-${i}.json \

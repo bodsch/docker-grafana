@@ -22,7 +22,7 @@ services:
       # MYSQL_PORT: 3306
       # MYSQL_ROOT_USER: root
       MYSQL_ROOT_PASS: database.pass
-      GRAPHITE_HOST: graphite
+      # GRAPHITE_HOST: graphite
       # GRAPHITE_PORT: 2003
       # GRAPHITE_HTTP_PORT: 8080
       #
