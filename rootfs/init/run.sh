@@ -2,6 +2,10 @@
 #
 #
 
+if [ ${DEBUG} ]
+then
+  set -x
+fi
 
 ORGANISATION=${ORGANISATION:-"Docker"}
 

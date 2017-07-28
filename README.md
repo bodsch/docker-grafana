@@ -7,9 +7,9 @@ this container use phantomjs from [Overbryd](https://github.com/Overbryd/docker-
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1707-27.4)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1707-27.4)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1707-27.4)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1707-30)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1707-30)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1707-30)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-grafana/
 [microbadger]: https://microbadger.com/images/bodsch/docker-grafana
@@ -61,35 +61,38 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 
 # supported Environment Vars
 
-`URL_PATH` to change the Path in the URL whe they run behind a proxy (default: `/`, example: `/grafana/`)
-
-`ORGANISATION` to change the Organization Name (default: `Docker`)
-
-`DATABASE_TYPE` to change the Type of Database. Supportet Types are `mysql` and `sqlite3` (default: sqlite3)
-
-`MYSQL_HOST` the MySQL Hostname
-
-`MYSQL_PORT` the MySQL Port (default: `3306`)
-
-`MYSQL_ROOT_USER` MySQL Root Username (default: `root`)
-
-`MYSQL_ROOT_PASS` MySQL Root Password
-
-`SQLITE_PATH` set the Storage-Path for a `sqlite` Database
-
-`GRAPHITE_HOST` the graphite Hostname
-
-`GRAPHITE_HTTP_PORT` the graphite HTTP Port (default: `8080`)
-
-`CARBON_HOST` the carbon Hostname to send internal Grafana metrics, can be identical with `GRAPHITE_HOST`
-
-`CARBON_PORT` the carbon Port (default: `2003`)
-
-`MEMCACHE_HOST` the memcache Hostname to store Sessions
-
-`MEMCACHE_PORT` the memcache Port (default: `11211`)
-
-`DATABASE_GRAFANA_PASS` the Database Password for Grafana (default: `grafana`)
+| Environmental Variable             | Default Value        | Description                                                     |
+| :--------------------------------- | :-------------       | :-----------                                                    |
+| `DATABASE_TYPE`                    | `sqlite3`            | supportet Types are `mysql` and `sqlite3`                       |
+| `ORGANISATION`                     | `Docker`             | to change the Organization Name                                 |
+| `URL_PATH`                         | `/`                  | to change the Path in the URL whe they run behind a proxy (example: `/grafana/`) |
+| `GRAFANA_USERS`                    | -                    | comma separated List to create Grafana Users.                   |
+|                                    |                      | The Format are `username:password:email`                        |
+|                                    |                      | (e.g. `admin:admin:admin@domain.tld,grafana:garafan:` and so on) |
+|                                    |                      | if the email field not set, he will be autocreate as `username@foo-bar.tld` |
+|                                    |                      |                                                                 |
+| `MYSQL_HOST`                       | -                    | MySQL Host                                                      |
+| `MYSQL_PORT`                       | `3306`               | MySQL Port                                                      |
+| `MYSQL_ROOT_USER`                  | `root`               | MySQL root User                                                 |
+| `MYSQL_ROOT_PASS`                  | -                    | MySQL root password                                             |
+| `SQLITE_PATH`                      | -                    | set the Storage-Path for a `sqlite` Database                    |
+| `DATABASE_GRAFANA_PASS`            | `grafana`            | the Database Password for Grafana                               |
+|                                    |                      |                                                                 |
+| `GRAPHITE_HOST`                    | -                    | the graphite Hostname                                           |
+| `GRAPHITE_PORT`                    | `2003`               | the graphite Port                                               |
+| `GRAPHITE_HTTP_PORT`               | `8080`               | the graphite HTTP Port                                          |
+|                                    |                      |                                                                 |
+| `CARBON_HOST`                      | -                    | the carbon Hostname to send internal Grafana metrics, can be identical with `GRAPHITE_HOST` |
+| `CARBON_PORT`                      | `2003`               | the carbon Port                                                 |
+|                                    |                      |                                                                 |
+| `MEMCACHE_HOST`                    | -                    | the memcache Hostname to store Sessions                         |
+| `MEMCACHE_PORT`                    | `11211`              | the memcache Port                                               |
+|                                    |                      |                                                                 |
+| `ICINGAWEB_ADMIN_USER`             | `icinga`             |                                                                 |
+| `ICINGAWEB_ADMIN_PASS`             | `icinga`             |                                                                 |
+| `ICINGAWEB2_USERS`                 | -                    | comma separated List to create Icingaweb2 Users. The Format are `username:password` |
+|                                    |                      | (e.g. `admin:admin,dashing:dashing` and so on)                  |
+|                                    |                      |                                                                 |
 
 
 # includes

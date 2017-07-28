@@ -1,6 +1,6 @@
 
 
-startGrafana() {
+start_grafana() {
 
   if [ "${DATABASE_TYPE}" == "mysql" ]
   then
@@ -48,13 +48,11 @@ startGrafana() {
     exit 1
   fi
 
-  sleep 5s
-
-  echo " [i] done"
+  sleep 2s
 }
 
 
-killGrafana() {
+kill_grafana() {
 
   grafana_pid=$(ps ax | grep grafana | grep -v grep | awk '{print $1}')
 
@@ -67,11 +65,38 @@ killGrafana() {
 }
 
 
-handleOrganisation() {
+create_api_key() {
+
+  echo " [i] create API key"
+
+  curl_opts="--silent --user admin:admin"
+
+  data=$(curl ${curl_opts} \
+    --silent \
+    --request POST \
+    --header 'Content-Type: application/json;charset=UTF-8' \
+    --data '{ "name": "admin", "role": "Admin" }' \
+    http://localhost:3000/api/auth/keys)
+
+  name=$(echo ${data} | jq  --raw-output '.name')
+  key=$(echo ${data} | jq  --raw-output '.key')
+
+  export API_KEY="${key}"
+}
+
+
+handle_organisation() {
 
   echo " [i] updating organistation to '${ORGANISATION}'"
 
-  curl_opts="--silent --user admin:admin"
+  curl_opts="--silent"
+
+  if [ -z ${API_KEY} ]
+  then
+    curl_opts="${curl_opts} --user admin:admin"
+  else
+    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
+  fi
 
   data=$(curl ${curl_opts} http://localhost:3000/api/org)
 
@@ -79,20 +104,28 @@ handleOrganisation() {
 
   if [ "${name}" != "${ORGANISATION}"  ]
   then
-    curl ${curl_opts} \
+    data=$(curl \
+      ${curl_opts} \
       --request PUT \
       --header 'Content-Type: application/json;charset=UTF-8' \
       --data-binary "{\"name\":\"${ORGANISATION}\"}" \
-      http://localhost:3000/api/org
+      http://localhost:3000/api/org)
   fi
-
-  echo " [i] done"
 }
 
 
-handleDataSources() {
+handle_datasources() {
 
-  curl_opts="--silent --user admin:admin"
+  echo " [i] updating datasources"
+
+  curl_opts="--silent"
+
+  if [ -z ${API_KEY} ]
+  then
+    curl_opts="${curl_opts} --user admin:admin"
+  else
+    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
+  fi
 
   datasource_count=$(curl ${curl_opts} 'http://localhost:3000/api/datasources' | json_reformat | grep -c "id")
 
@@ -111,12 +144,12 @@ handleDataSources() {
       type=$(echo ${data} | jq --raw-output '.type')
       default=$(echo ${data} | jq --raw-output '.isDefault')
 
-      curl ${curl_opts} \
-        --silent \
+      data=$(curl \
+        ${curl_opts} \
         --request PUT \
         --header 'Content-Type: application/json;charset=UTF-8' \
         --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
-        http://localhost:3000/api/datasources/${id}
+        http://localhost:3000/api/datasources/${id})
 
     done
   else
@@ -141,22 +174,106 @@ handleDataSources() {
         -e "s/%DATABASE_DEFAULT%/${DATABASE_DEFAULT}/" \
         /init/config/template/datasource-${i}.json
 
-      curl ${curl_opts} \
-        --silent \
+      data=$(curl \
+        ${curl_opts} \
         --request POST \
         --header 'Content-Type: application/json;charset=UTF-8' \
         --data-binary @/init/config/template/datasource-${i}.json \
-        http://localhost:3000/api/datasources/
+        http://localhost:3000/api/datasources/)
     done
   fi
 
   sleep 2s
-
-  echo " [i] done"
 }
 
 
-insertPlugins() {
+handle_users() {
+
+  echo " [i] create users"
+
+  curl_opts="--silent"
+
+  if [ -z ${API_KEY} ]
+  then
+    curl_opts="${curl_opts} --user admin:admin"
+  else
+    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
+  fi
+
+  users=
+
+  if [ -n "${GRAFANA_USERS}" ]
+  then
+    users=$(echo ${GRAFANA_USERS} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
+
+    if [ -z "${users}" ]
+    then
+      echo " [i] no user found, skip .."
+
+      return
+    else
+      for u in ${users}
+      do
+
+        user=$(echo "${u}" | cut -d: -f1)
+        pass=$(echo "${u}" | cut -d: -f2)
+        email=$(echo "${u}" | cut -d: -f3)
+
+
+        [ -z ${pass} ] && pass=${user}
+        [ -z ${email} ] && email="${user}@foo-bar.tld"
+
+        if [ ${#pass} -lt 8 ]
+        then
+          echo " [E] Passwordlength for user '${user}' is too short: password has ${#pass} characters, please use min. 8 chars"
+          continue
+        fi
+
+        echo "      - '${user}'"
+
+        data=$(curl \
+          ${curl_opts} \
+          --request POST \
+          --header 'Content-Type: application/json;charset=UTF-8' \
+          --data "{ \"name\": \"${user}\", \"email\": \"${email}\", \"login\": \"${user}\", \"password\": \"${pass}\" }" \
+          http://localhost:3000/api/admin/users)
+
+      done
+
+      # change admin password
+      # PUT /api/admin/users/:id/password
+
+      echo " [i] change default 'admin' password"
+      data=$(curl \
+        ${curl_opts} \
+        --request PUT \
+        --header 'Content-Type: application/json;charset=UTF-8' \
+        --data '{"password":"grafana-admin"}' \
+        http://localhost:3000/api/admin/users/1/password)
+
+#       # change permissions from 'Admin' to 'Viewer'
+#       # PUT /api/admin/users/:id/permissions
+#       curl \
+#         ${curl_opts} \
+#         --request PUT \
+#         --header 'Content-Type: application/json;charset=UTF-8' \
+#         --data '{"isGrafanaAdmin": false}' \
+#         http://localhost:3000/api/admin/users/1/permissions
+#
+#       # alternative:
+#       # DELETE admin user
+#       # DELETE /api/admin/users/:id
+#       curl \
+#         ${curl_opts} \
+#         --request DELETE \
+#         --header 'Content-Type: application/json;charset=UTF-8' \
+#         http://localhost:3000/api/admin/users/1
+    fi
+  fi
+}
+
+
+insert_plugins() {
 
   local plugins="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel"
 
@@ -168,7 +285,7 @@ insertPlugins() {
 }
 
 
-updatePlugin() {
+update_plugins() {
 
   echo " [i] update plugins"
 
@@ -178,12 +295,15 @@ updatePlugin() {
 }
 
 
-startGrafana
+start_grafana
 
-handleOrganisation
-handleDataSources
+# create_api_key
 
-# insertPlugins
-updatePlugin
+handle_organisation
+handle_datasources
+handle_users
 
-killGrafana
+# insert_plugins
+update_plugins
+
+kill_grafana
