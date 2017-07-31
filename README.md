@@ -67,9 +67,10 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 | `ORGANISATION`                     | `Docker`             | to change the Organization Name                                 |
 | `URL_PATH`                         | `/`                  | to change the Path in the URL whe they run behind a proxy (example: `/grafana/`) |
 | `GRAFANA_USERS`                    | -                    | comma separated List to create Grafana Users.                   |
-|                                    |                      | The Format are `username:password:email`                        |
-|                                    |                      | (e.g. `admin:admin:admin@domain.tld,grafana:garafan:` and so on) |
+|                                    |                      | The Format are `username:password:email:role`                        |
+|                                    |                      | (e.g. `admin:admin:admin@domain.tld:admin,grafana:garafan::` and so on) |
 |                                    |                      | if the email field not set, he will be autocreate as `username@foo-bar.tld` |
+|                                    |                      | if the role field not set, the Role `Viewer` will be used. Currentl, only `Viewer` and `Admin` is supported |
 |                                    |                      |                                                                 |
 | `MYSQL_HOST`                       | -                    | MySQL Host                                                      |
 | `MYSQL_PORT`                       | `3306`               | MySQL Port                                                      |
@@ -87,11 +88,6 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 |                                    |                      |                                                                 |
 | `MEMCACHE_HOST`                    | -                    | the memcache Hostname to store Sessions                         |
 | `MEMCACHE_PORT`                    | `11211`              | the memcache Port                                               |
-|                                    |                      |                                                                 |
-| `ICINGAWEB_ADMIN_USER`             | `icinga`             |                                                                 |
-| `ICINGAWEB_ADMIN_PASS`             | `icinga`             |                                                                 |
-| `ICINGAWEB2_USERS`                 | -                    | comma separated List to create Icingaweb2 Users. The Format are `username:password` |
-|                                    |                      | (e.g. `admin:admin,dashing:dashing` and so on)                  |
 |                                    |                      |                                                                 |
 
 

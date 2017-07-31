@@ -7,6 +7,8 @@ then
   set -x
 fi
 
+export WORK_DIR=/srv/grafana
+
 ORGANISATION=${ORGANISATION:-"Docker"}
 
 URL_PATH=${URL_PATH:-"/"}
@@ -44,6 +46,8 @@ DBA_NAME=
 
 
 prepare() {
+
+  [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
 
   if [ "${DATABASE_TYPE}" == "sqlite3" ]
   then

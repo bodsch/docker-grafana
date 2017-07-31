@@ -67,21 +67,30 @@ kill_grafana() {
 
 create_api_key() {
 
-  echo " [i] create API key"
+  if [ -f ${WORK_DIR}/api_key ]
+  then
+    echo " [i] read API key"
 
-  curl_opts="--silent --user admin:admin"
+    API_KEY=$(cat ${WORK_DIR}/api_key)
 
-  data=$(curl ${curl_opts} \
-    --silent \
-    --request POST \
-    --header 'Content-Type: application/json;charset=UTF-8' \
-    --data '{ "name": "admin", "role": "Admin" }' \
-    http://localhost:3000/api/auth/keys)
+    export API_KEY
+  else
+    echo " [i] create API key"
 
-  name=$(echo ${data} | jq  --raw-output '.name')
-  key=$(echo ${data} | jq  --raw-output '.key')
+    curl_opts="--silent --user admin:admin"
 
-  export API_KEY="${key}"
+    data=$(curl ${curl_opts} \
+      --silent \
+      --request POST \
+      --header 'Content-Type: application/json;charset=UTF-8' \
+      --data '{ "name": "admin", "role": "Admin" }' \
+      http://localhost:3000/api/auth/keys)
+
+    name=$(echo ${data} | jq  --raw-output '.name')
+    key=$(echo ${data} | jq  --raw-output '.key')
+
+    echo ${key} >> ${WORK_DIR}/api_key
+  fi
 }
 
 
@@ -106,8 +115,8 @@ handle_organisation() {
   then
     data=$(curl \
       ${curl_opts} \
-      --request PUT \
       --header 'Content-Type: application/json;charset=UTF-8' \
+      --request PUT \
       --data-binary "{\"name\":\"${ORGANISATION}\"}" \
       http://localhost:3000/api/org)
   fi
@@ -146,8 +155,8 @@ handle_datasources() {
 
       data=$(curl \
         ${curl_opts} \
-        --request PUT \
         --header 'Content-Type: application/json;charset=UTF-8' \
+        --request PUT \
         --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
         http://localhost:3000/api/datasources/${id})
 
@@ -176,8 +185,8 @@ handle_datasources() {
 
       data=$(curl \
         ${curl_opts} \
-        --request POST \
         --header 'Content-Type: application/json;charset=UTF-8' \
+        --request POST \
         --data-binary @/init/config/template/datasource-${i}.json \
         http://localhost:3000/api/datasources/)
     done
@@ -218,10 +227,11 @@ handle_users() {
         user=$(echo "${u}" | cut -d: -f1)
         pass=$(echo "${u}" | cut -d: -f2)
         email=$(echo "${u}" | cut -d: -f3)
-
+        role=$(echo "${u}" | cut -d: -f4)
 
         [ -z ${pass} ] && pass=${user}
         [ -z ${email} ] && email="${user}@foo-bar.tld"
+        [ -z ${role} ] && role="viewer"
 
         if [ ${#pass} -lt 8 ]
         then
@@ -233,10 +243,36 @@ handle_users() {
 
         data=$(curl \
           ${curl_opts} \
-          --request POST \
           --header 'Content-Type: application/json;charset=UTF-8' \
+          --request POST \
           --data "{ \"name\": \"${user}\", \"email\": \"${email}\", \"login\": \"${user}\", \"password\": \"${pass}\" }" \
           http://localhost:3000/api/admin/users)
+
+        id=$(echo ${data} | jq  --raw-output '.id')
+        message=$(echo ${data} | jq  --raw-output '.message')
+
+        if [ "${message}" = "User created" ]
+        then
+          # user successful created
+          if [ $(echo "${role}" | tr '[:upper:]' '[:lower:]') == "admin" ]
+          then
+
+            data=$(curl \
+              ${curl_opts} \
+              --header 'Content-Type: application/json;charset=UTF-8' \
+              --request PATCH \
+              --data "{ \"role\": \"Admin\" }" \
+              http://localhost:3000/api/org/users/${id})
+
+#             data=$(curl \
+#               ${curl_opts} \
+#               --request PUT \
+#               --header 'Content-Type: application/json;charset=UTF-8' \
+#               --data "{ \"isGrafanaAdmin\": true }" \
+#               http://localhost:3000/api/admin/users/${id}/permissions)
+
+          fi
+        fi
 
       done
 
@@ -246,8 +282,8 @@ handle_users() {
       echo " [i] change default 'admin' password"
       data=$(curl \
         ${curl_opts} \
-        --request PUT \
         --header 'Content-Type: application/json;charset=UTF-8' \
+        --request PUT \
         --data '{"password":"grafana-admin"}' \
         http://localhost:3000/api/admin/users/1/password)
 
@@ -297,7 +333,7 @@ update_plugins() {
 
 start_grafana
 
-# create_api_key
+create_api_key
 
 handle_organisation
 handle_datasources

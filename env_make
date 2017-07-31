@@ -8,4 +8,4 @@ ENV = \
   --env URL_PATH="/" \
   --env ORGANISATION="Development" \
   --env SQLITE_PATH="" \
-  --env GRAFANA_USERS="foo:barbarbar:,bar:barbar:bar@foo.tld"
+  --env GRAFANA_USERS="foo:barbarbar::admin,bar:barbar:bar@foo.tld:"
