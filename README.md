@@ -7,9 +7,9 @@ this container use phantomjs from [Overbryd](https://github.com/Overbryd/docker-
 
 # Status
 
-[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch=1707-30)][hub]
-[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch=1707-30)][microbadger]
-[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch=1707-30)][travis]
+[![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch)][hub]
+[![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch)][microbadger]
+[![Build Status](https://travis-ci.org/bodsch/docker-grafana.svg?branch)][travis]
 
 [hub]: https://hub.docker.com/r/bodsch/docker-grafana/
 [microbadger]: https://microbadger.com/images/bodsch/docker-grafana
