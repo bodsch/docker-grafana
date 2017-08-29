@@ -1,6 +1,6 @@
 
 
-startGrafana() {
+start_grafana() {
 
   if [ "${DATABASE_TYPE}" == "mysql" ]
   then
@@ -24,29 +24,35 @@ startGrafana() {
 
   echo " [i] wait for initalize grafana .. "
 
-  RETRY=15
+  sleep 2s
+
+  RETRY=40
 
   # wait for grafana
   #
   until [ ${RETRY} -le 0 ]
   do
-    nc localhost 3000 < /dev/null > /dev/null
+    grafana_up=$(netstat -tlnp | grep ":3000" | wc -l)
 
-    [ $? -eq 0 ] && break
+    [ ${grafana_up} -eq 1 ] && break
 
-    echo " [i] Waiting for grafana to come up"
+    echo " [i] waiting for grafana to come up"
 
-    sleep 5s
+    sleep 2s
     RETRY=$(expr ${RETRY} - 1)
   done
 
-  sleep 5s
+  if [ $RETRY -le 0 ]
+  then
+    echo " [E] grafana is not successful started :("
+    exit 1
+  fi
 
-  echo " [i] done"
+  sleep 2s
 }
 
 
-killGrafana() {
+kill_grafana() {
 
   grafana_pid=$(ps ax | grep grafana | grep -v grep | awk '{print $1}')
 
@@ -59,11 +65,47 @@ killGrafana() {
 }
 
 
-handleOrganisation() {
+create_api_key() {
+
+  if [ -f ${WORK_DIR}/api_key ]
+  then
+    echo " [i] read API key"
+
+    API_KEY=$(cat ${WORK_DIR}/api_key)
+
+    export API_KEY
+  else
+    echo " [i] create API key"
+
+    curl_opts="--silent --user admin:admin"
+
+    data=$(curl ${curl_opts} \
+      --silent \
+      --request POST \
+      --header 'Content-Type: application/json;charset=UTF-8' \
+      --data '{ "name": "admin", "role": "Admin" }' \
+      http://localhost:3000/api/auth/keys)
+
+    name=$(echo ${data} | jq  --raw-output '.name')
+    key=$(echo ${data} | jq  --raw-output '.key')
+
+    echo ${key} >> ${WORK_DIR}/api_key
+  fi
+}
+
+
+handle_organisation() {
 
   echo " [i] updating organistation to '${ORGANISATION}'"
 
-  curl_opts="--silent --user admin:admin"
+  curl_opts="--silent"
+
+  if [ -z ${API_KEY} ]
+  then
+    curl_opts="${curl_opts} --user admin:admin"
+  else
+    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
+  fi
 
   data=$(curl ${curl_opts} http://localhost:3000/api/org)
 
@@ -71,20 +113,28 @@ handleOrganisation() {
 
   if [ "${name}" != "${ORGANISATION}"  ]
   then
-    curl ${curl_opts} \
-      --request PUT \
+    data=$(curl \
+      ${curl_opts} \
       --header 'Content-Type: application/json;charset=UTF-8' \
+      --request PUT \
       --data-binary "{\"name\":\"${ORGANISATION}\"}" \
-      http://localhost:3000/api/org
+      http://localhost:3000/api/org)
   fi
-
-  echo " [i] done"
 }
 
 
-handleDataSources() {
+handle_datasources() {
 
-  curl_opts="--silent --user admin:admin"
+  echo " [i] updating datasources"
+
+  curl_opts="--silent"
+
+  if [ -z ${API_KEY} ]
+  then
+    curl_opts="${curl_opts} --user admin:admin"
+  else
+    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
+  fi
 
   datasource_count=$(curl ${curl_opts} 'http://localhost:3000/api/datasources' | json_reformat | grep -c "id")
 
@@ -103,11 +153,12 @@ handleDataSources() {
       type=$(echo ${data} | jq --raw-output '.type')
       default=$(echo ${data} | jq --raw-output '.isDefault')
 
-      curl ${curl_opts} \
-        --request PUT \
+      data=$(curl \
+        ${curl_opts} \
         --header 'Content-Type: application/json;charset=UTF-8' \
+        --request PUT \
         --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
-        http://localhost:3000/api/datasources/${id}
+        http://localhost:3000/api/datasources/${id})
 
     done
   else
@@ -132,21 +183,133 @@ handleDataSources() {
         -e "s/%DATABASE_DEFAULT%/${DATABASE_DEFAULT}/" \
         /init/config/template/datasource-${i}.json
 
-      curl ${curl_opts} \
-        --request POST \
+      data=$(curl \
+        ${curl_opts} \
         --header 'Content-Type: application/json;charset=UTF-8' \
+        --request POST \
         --data-binary @/init/config/template/datasource-${i}.json \
-        http://localhost:3000/api/datasources/
+        http://localhost:3000/api/datasources/)
     done
   fi
 
   sleep 2s
-
-  echo " [i] done"
 }
 
 
-insertPlugins() {
+handle_users() {
+
+  echo " [i] create users"
+
+  curl_opts="--silent"
+
+  if [ -z ${API_KEY} ]
+  then
+    curl_opts="${curl_opts} --user admin:admin"
+  else
+    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
+  fi
+
+  users=
+
+  if [ -n "${GRAFANA_USERS}" ]
+  then
+    users=$(echo ${GRAFANA_USERS} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
+
+    if [ -z "${users}" ]
+    then
+      echo " [i] no user found, skip .."
+
+      return
+    else
+      for u in ${users}
+      do
+
+        user=$(echo "${u}" | cut -d: -f1)
+        pass=$(echo "${u}" | cut -d: -f2)
+        email=$(echo "${u}" | cut -d: -f3)
+        role=$(echo "${u}" | cut -d: -f4)
+
+        [ -z ${pass} ] && pass=${user}
+        [ -z ${email} ] && email="${user}@foo-bar.tld"
+        [ -z ${role} ] && role="viewer"
+
+        if [ ${#pass} -lt 8 ]
+        then
+          echo " [E] Passwordlength for user '${user}' is too short: password has ${#pass} characters, please use min. 8 chars"
+          continue
+        fi
+
+        echo "      - '${user}'"
+
+        data=$(curl \
+          ${curl_opts} \
+          --header 'Content-Type: application/json;charset=UTF-8' \
+          --request POST \
+          --data "{ \"name\": \"${user}\", \"email\": \"${email}\", \"login\": \"${user}\", \"password\": \"${pass}\" }" \
+          http://localhost:3000/api/admin/users)
+
+        id=$(echo ${data} | jq  --raw-output '.id')
+        message=$(echo ${data} | jq  --raw-output '.message')
+
+        if [ "${message}" = "User created" ]
+        then
+          # user successful created
+          if [ $(echo "${role}" | tr '[:upper:]' '[:lower:]') == "admin" ]
+          then
+
+            data=$(curl \
+              ${curl_opts} \
+              --header 'Content-Type: application/json;charset=UTF-8' \
+              --request PATCH \
+              --data "{ \"role\": \"Admin\" }" \
+              http://localhost:3000/api/org/users/${id})
+
+#             data=$(curl \
+#               ${curl_opts} \
+#               --request PUT \
+#               --header 'Content-Type: application/json;charset=UTF-8' \
+#               --data "{ \"isGrafanaAdmin\": true }" \
+#               http://localhost:3000/api/admin/users/${id}/permissions)
+
+          fi
+        fi
+
+      done
+
+      # change admin password
+      # PUT /api/admin/users/:id/password
+
+      echo " [i] change default 'admin' password"
+      data=$(curl \
+        ${curl_opts} \
+        --header 'Content-Type: application/json;charset=UTF-8' \
+        --request PUT \
+        --data '{"password":"grafana-admin"}' \
+        http://localhost:3000/api/admin/users/1/password)
+
+#       # change permissions from 'Admin' to 'Viewer'
+#       # PUT /api/admin/users/:id/permissions
+#       curl \
+#         ${curl_opts} \
+#         --request PUT \
+#         --header 'Content-Type: application/json;charset=UTF-8' \
+#         --data '{"isGrafanaAdmin": false}' \
+#         http://localhost:3000/api/admin/users/1/permissions
+#
+#       # alternative:
+#       # DELETE admin user
+#       # DELETE /api/admin/users/:id
+#       curl \
+#         ${curl_opts} \
+#         --request DELETE \
+#         --header 'Content-Type: application/json;charset=UTF-8' \
+#         http://localhost:3000/api/admin/users/1
+    fi
+  fi
+}
+
+
+insert_plugins() {
 
   local plugins="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel"
 
@@ -158,7 +321,7 @@ insertPlugins() {
 }
 
 
-updatePlugin() {
+update_plugins() {
 
   echo " [i] update plugins"
 
@@ -168,12 +331,15 @@ updatePlugin() {
 }
 
 
-startGrafana
+start_grafana
 
-handleOrganisation
-handleDataSources
+create_api_key
 
-# insertPlugins
-updatePlugin
+handle_organisation
+handle_datasources
+handle_users
 
-killGrafana
+# insert_plugins
+update_plugins
+
+kill_grafana
