@@ -1,9 +1,6 @@
 ---
 version: '2.0'
 
-volumes:
-  database:
-
 networks:
   mon:
     driver: bridge
@@ -20,9 +17,51 @@ services:
     hostname: grafana
     ports:
       - 3000:3000
-    extends:
-      file: environment.yml
-      service: grafana
+    environment:
+      URL_PATH: /
+      ORGANISATION: Docker
+      DATABASE_TYPE: mysql
+      MYSQL_HOST: database
+      # MYSQL_PORT: 3306
+      # MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASS: database.pass
+      # GRAPHITE_HOST: graphite
+      # GRAPHITE_PORT: 2003
+      # GRAPHITE_HTTP_PORT: 8080
+      #
+      # WE USE AN SEPERATE CARBON SERVICE
+      # IF NOT, THEN SET THEN TO $GRAPHITE_HOST
+      # (see above in this configuration part!)
+      # CARBON_HOST: carbon
+      # CARBON_PORT: 2003
+      # MEMCACHE_HOST: memcached
+      # MEMCACHE_PORT: 11211
+      # REDIS_HOST: redis
+      # REDIS_PORT: 6379
+      # DATABASE_GRAFANA_PASS: grafana
+      # GRAFANA_USERS: 'coremedia:coremedia::admin'
+      AUTHENTICATION: '{
+        "ldap": {
+          "server": "${LDAP_SERVER}",
+          "port":"${LDAP_PORT}",
+          "bind_dn": "${LDAP_BIND_DN}",
+          "bind_password": "${LDAP_BIND_PASSWORD}",
+          "base_dn": "${LDAP_BASE_DN}",
+          "group_dn": "${LDAP_GROUP_DN}",
+        },
+        "users": [{
+          "username": "coremedia",
+          "password": "coremedia",
+          "email": "",
+          "role": "Admin"
+        },
+        {
+          "username": "foo",
+          "password": "bar11bar",
+          "email": "",
+          "role": "Viewer"
+        }]
+      }'
     depends_on:
       - database
     links:
@@ -36,17 +75,17 @@ services:
 
   database:
     restart: always
-    image: bodsch/docker-mysql:1707-30.1
+    image: bodsch/docker-mysql:1708-35.1
     container_name: database
     hostname: database
     ports:
       - 3306:3306
-    extends:
-      file: environment.yml
-      service: database
+    environment:
+      # MYSQL_SYSTEM_USER:
+      MYSQL_ROOT_PASS: database.pass
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - database:/srv
+      - /tmp/docker-data/database:/srv
     networks:
       mon:
         ipv4_address: 192.168.10.5
