@@ -198,8 +198,8 @@ update_datasources() {
 
 update_authentication() {
 
-  ldap=$(echo "${AUTHENTICATION}"  | jq '.ldap')
-  users=$(echo "${AUTHENTICATION}"  | jq '.users')
+  ldap=$(echo "${AUTHENTICATION}"  | jq '.')
+  users=$(echo "${USERS}"  | jq '.')
 
   if [ ! -z "${ldap}" ]
   then
@@ -272,7 +272,6 @@ insert_user() {
 
   if [ "${message}" = "User created" ]
   then
-    echo "        ... success"
     # user successful created
     if [ $(echo "${role}" | tr '[:upper:]' '[:lower:]') == "admin" ]
     then
@@ -290,8 +289,6 @@ insert_user() {
         http://localhost:3000/api/admin/users/${id}/permissions)
 
     fi
-  else
-    echo "        ... fail"
   fi
 
 }

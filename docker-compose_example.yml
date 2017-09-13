@@ -41,15 +41,15 @@ services:
       # DATABASE_GRAFANA_PASS: grafana
       # GRAFANA_USERS: 'coremedia:coremedia::admin'
       AUTHENTICATION: '{
-        "ldap": {
-          "server": "${LDAP_SERVER}",
-          "port":"${LDAP_PORT}",
-          "bind_dn": "${LDAP_BIND_DN}",
-          "bind_password": "${LDAP_BIND_PASSWORD}",
-          "base_dn": "${LDAP_BASE_DN}",
-          "group_dn": "${LDAP_GROUP_DN}",
-        },
-        "users": [{
+        "server": "${LDAP_SERVER}",
+        "port":"${LDAP_PORT}",
+        "bind_dn": "${LDAP_BIND_DN}",
+        "bind_password": "${LDAP_BIND_PASSWORD}",
+        "base_dn": "${LDAP_BASE_DN}",
+        "group_dn": "${LDAP_GROUP_DN}"
+      }'
+      USERS: '[
+        {
           "username": "coremedia",
           "password": "coremedia",
           "email": "",
@@ -60,8 +60,8 @@ services:
           "password": "bar11bar",
           "email": "",
           "role": "Viewer"
-        }]
-      }'
+        }
+      ]'
     depends_on:
       - database
     links:
