@@ -10,7 +10,8 @@ ENV \
   GOROOT=/usr/lib/go \
   TERM=xterm \
   BUILD_DATE="2017-08-29" \
-  GRAFANA_VERSION="4.5.0-pre1" \
+  BUILD_TYPE="stable" \
+  GRAFANA_VERSION="4.5.0" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
   APK_ADD="ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
@@ -39,10 +40,14 @@ RUN \
   echo "http://${ALPINE_MIRROR}/alpine/edge/community"              >> /etc/apk/repositories && \
   apk --no-cache update && \
   apk --no-cache upgrade && \
+  apk --no-cache add ${APK_ADD} && \
+  if [ "${BUILD_TYPE}" != "stable" ] ; then \
   #
   # build packages
   #
-  apk --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
+  apk --no-cache add ${APK_BUILD_BASE} ; \
+
+  fi && \
   #
   # download and install phantomJS
   #
@@ -54,7 +59,10 @@ RUN \
     https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/${PHANTOMJS_VERSION}/phantomjs-alpine-x86_64.tar.bz2 \
   | bunzip2 \
   | tar x -C / && \
-  ln -s /phantomjs/phantomjs /usr/bin/ && \
+  ln -s /phantomjs/phantomjs /usr/bin/
+
+RUN \
+  if [ "${BUILD_TYPE}" != "stable" ] ; then \
   #
   # build and install grafana
   #
@@ -65,7 +73,20 @@ RUN \
   go run build.go setup  && \
   echo "grafana build .." && \
   go run build.go build && \
-  unset GOMAXPROCS && \
+  unset GOMAXPROCS ; \
+  else \
+    echo "get grafana stable release ${GRAFANA_VERSION} ..." && \
+    mkdir /opt && \
+    curl \
+      --silent \
+      --location \
+      --retry 3 \
+      --output /opt/grafana-${GRAFANA_VERSION}.linux-x64.tar.gz \
+      https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-${GRAFANA_VERSION}.linux-x64.tar.gz ; \
+  fi
+
+
+RUN \
   #
   # build frontend
   #
