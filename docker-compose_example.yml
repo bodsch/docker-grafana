@@ -40,8 +40,8 @@ services:
       # REDIS_PORT: 6379
       # DATABASE_GRAFANA_PASS: grafana
       # GRAFANA_USERS: 'coremedia:coremedia::admin'
-      AUTHENTICATION: '{
-        "server": "${LDAP_SERVER}",
+      LDAP: '{
+        "server":"${LDAP_SERVER}",
         "port":"${LDAP_PORT}",
         "bind_dn": "${LDAP_BIND_DN}",
         "bind_password": "${LDAP_BIND_PASSWORD}",

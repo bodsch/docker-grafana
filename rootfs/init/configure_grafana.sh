@@ -196,10 +196,9 @@ update_datasources() {
 }
 
 
-update_authentication() {
+ldap_authentication() {
 
-  ldap=$(echo "${AUTHENTICATION}"  | jq '.')
-  users=$(echo "${USERS}"  | jq '.')
+  ldap=$(echo "${LDAP}"  | jq '.')
 
   if [ ! -z "${ldap}" ]
   then
@@ -220,21 +219,21 @@ update_authentication() {
 
   fi
 
-  if [ ! -z "${users}" ]
-  then
-
-    echo " [i] create users"
-
-    echo "${users}" | jq --compact-output --raw-output '.[]' | while IFS='' read u
-    do
-      username=$(echo "${u}" | jq .username)
-      password=$(echo "${u}" | jq .password)
-      email=$(echo "${u}" | jq .email)
-      role=$(echo "${u}" | jq .role)
-
-      insert_user "${username}" "${password}" "${email}", "${role}"
-    done
-  fi
+#   if [ ! -z "${users}" ]
+#   then
+#
+#     echo " [i] create users"
+#
+#     echo "${users}" | jq --compact-output --raw-output '.[]' | while IFS='' read u
+#     do
+#       username=$(echo "${u}" | jq .username)
+#       password=$(echo "${u}" | jq .password)
+#       email=$(echo "${u}" | jq .email)
+#       role=$(echo "${u}" | jq .role)
+#
+#       insert_user "${username}" "${password}" "${email}", "${role}"
+#     done
+#   fi
 }
 
 
@@ -298,7 +297,24 @@ handle_users() {
 
   echo " [i] create users"
 
-  curl_opts="--silent"
+  users=$(echo "${USERS}"  | jq '.')
+
+  if [ ! -z "${users}" ]
+  then
+
+    echo "${users}" | jq --compact-output --raw-output '.[]' | while IFS='' read u
+    do
+      username=$(echo "${u}" | jq .username)
+      password=$(echo "${u}" | jq .password)
+      email=$(echo "${u}" | jq .email)
+      role=$(echo "${u}" | jq .role)
+
+      insert_user "${username}" "${password}" "${email}", "${role}"
+    done
+  fi
+
+
+  curl_opts="--silent --header 'Content-Type: application/json;charset=UTF-8'"
 
   if [ -z ${API_KEY} ]
   then
@@ -341,7 +357,6 @@ handle_users() {
 
         data=$(curl \
           ${curl_opts} \
-          --header 'Content-Type: application/json;charset=UTF-8' \
           --request POST \
           --data "{ \"name\": \"${user}\", \"email\": \"${email}\", \"login\": \"${user}\", \"password\": \"${pass}\" }" \
           http://localhost:3000/api/admin/users)
@@ -357,17 +372,16 @@ handle_users() {
 
             data=$(curl \
               ${curl_opts} \
-              --header 'Content-Type: application/json;charset=UTF-8' \
               --request PATCH \
               --data "{ \"role\": \"Admin\" }" \
               http://localhost:3000/api/org/users/${id})
 
-#             data=$(curl \
-#               ${curl_opts} \
-#               --request PUT \
-#               --header 'Content-Type: application/json;charset=UTF-8' \
-#               --data "{ \"isGrafanaAdmin\": true }" \
-#               http://localhost:3000/api/admin/users/${id}/permissions)
+            data=$(curl \
+              ${curl_opts} \
+              --request PUT \
+              --header 'Content-Type: application/json;charset=UTF-8' \
+              --data "{ \"isGrafanaAdmin\": true }" \
+              http://localhost:3000/api/admin/users/${id}/permissions)
 
           fi
         fi
@@ -436,7 +450,7 @@ create_api_key
 update_organisation
 # update_datasources
 update_authentication
-# handle_users
+handle_users
 
 # insert_plugins
 # update_plugins
