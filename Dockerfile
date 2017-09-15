@@ -8,8 +8,9 @@ ENV \
   ALPINE_VERSION="v3.6" \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
+  GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-08-29" \
+  BUILD_DATE="2017-09-15" \
   BUILD_TYPE="stable" \
   GRAFANA_VERSION="4.5.0" \
   PHANTOMJS_VERSION="2.11" \
@@ -20,7 +21,7 @@ ENV \
 EXPOSE 3000
 
 LABEL \
-  version="1708-35" \
+  version="1709-37" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
@@ -40,14 +41,7 @@ RUN \
   echo "http://${ALPINE_MIRROR}/alpine/edge/community"              >> /etc/apk/repositories && \
   apk --no-cache update && \
   apk --no-cache upgrade && \
-  apk --no-cache add ${APK_ADD} && \
-  if [ "${BUILD_TYPE}" != "stable" ] ; then \
-  #
-  # build packages
-  #
-  apk --no-cache add ${APK_BUILD_BASE} ; \
-
-  fi && \
+  apk --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
   #
@@ -59,34 +53,25 @@ RUN \
     https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/${PHANTOMJS_VERSION}/phantomjs-alpine-x86_64.tar.bz2 \
   | bunzip2 \
   | tar x -C / && \
-  ln -s /phantomjs/phantomjs /usr/bin/
-
-RUN \
-  if [ "${BUILD_TYPE}" != "stable" ] ; then \
+  ln -s /phantomjs/phantomjs /usr/bin/ && \
   #
   # build and install grafana
   #
   echo "get grafana sources ..." && \
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
+  #
+  # build stable packages
+  if [ "${BUILD_TYPE}" == "stable" ] ; then \
+    echo "switch to stable Tag v${GRAFANA_VERSION}" && \
+    git checkout tags/v${GRAFANA_VERSION} 2> /dev/null ; \
+  fi && \
+  #
   echo "grafana setup .." && \
-  go run build.go setup  && \
+  go run build.go setup  2> /dev/null && \
   echo "grafana build .." && \
-  go run build.go build && \
-  unset GOMAXPROCS ; \
-  else \
-    echo "get grafana stable release ${GRAFANA_VERSION} ..." && \
-    mkdir /opt && \
-    curl \
-      --silent \
-      --location \
-      --retry 3 \
-      --output /opt/grafana-${GRAFANA_VERSION}.linux-x64.tar.gz \
-      https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-${GRAFANA_VERSION}.linux-x64.tar.gz ; \
-  fi
-
-
-RUN \
+  go run build.go build  2> /dev/null && \
+  unset GOMAXPROCS && \
   #
   # build frontend
   #
