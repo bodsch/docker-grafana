@@ -10,18 +10,18 @@ ENV \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-09-15" \
+  BUILD_DATE="2017-09-19" \
   BUILD_TYPE="stable" \
   GRAFANA_VERSION="4.5.0" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_ADD="ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
+  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
   APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
 
 EXPOSE 3000
 
 LABEL \
-  version="1709-37" \
+  version="1709" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \

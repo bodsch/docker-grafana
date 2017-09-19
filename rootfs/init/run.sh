@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 #
 
@@ -81,9 +81,11 @@ prepare() {
 
   if [ -z ${CARBON_HOST} ]
   then
-    CARBON_PORT=
+    carbon_host=
+    ENABLE_METRICS="false"
   else
     carbon_host="${CARBON_HOST}:${CARBON_PORT}"
+    ENABLE_METRICS="true"
   fi
 
   sed -i \
@@ -95,6 +97,7 @@ prepare() {
     -e 's|%URL_PATH%|'${URL_PATH}'|g' \
     -e 's|%SESSION_PROVIDER%|'${SESSION_PROVIDER}'|g' \
     -e 's|%SESSION_CONFIG%|'${SESSION_CONFIG}'|g' \
+    -e 's|%ENABLE_METRICS%|'${ENABLE_METRICS}'|g' \
     -e 's|%CARBON_HOST%|'${carbon_host}'|g' \
     -e 's|%ORGANISATION%|'${ORGANISATION}'|g' \
     -e 's|%SQLITE_PATH%|'${SQLITE_PATH}'|g' \
