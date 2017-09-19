@@ -20,11 +20,11 @@ services:
     environment:
       URL_PATH: /
       ORGANISATION: Docker
-      DATABASE_TYPE: mysql
-      MYSQL_HOST: database
+      ## DATABASE_TYPE: mysql
+      ## MYSQL_HOST: database
       # MYSQL_PORT: 3306
       # MYSQL_ROOT_USER: root
-      MYSQL_ROOT_PASS: database.pass
+      ## MYSQL_ROOT_PASS: database.pass
       # GRAPHITE_HOST: graphite
       # GRAPHITE_PORT: 2003
       # GRAPHITE_HTTP_PORT: 8080
@@ -40,13 +40,15 @@ services:
       # REDIS_PORT: 6379
       # DATABASE_GRAFANA_PASS: grafana
       # GRAFANA_USERS: 'coremedia:coremedia::admin'
+      ADMIN_PASSWORD: grafana_admin
       LDAP: '{
         "server":"${LDAP_SERVER}",
         "port":"${LDAP_PORT}",
         "bind_dn": "${LDAP_BIND_DN}",
         "bind_password": "${LDAP_BIND_PASSWORD}",
         "base_dn": "${LDAP_BASE_DN}",
-        "group_dn": "${LDAP_GROUP_DN}"
+        "group_dn": "${LDAP_GROUP_DN}",
+        "search_filter": "${LDAP_SEARCH_FILTER}"
       }'
       USERS: '[
         {
@@ -62,10 +64,6 @@ services:
           "role": "Viewer"
         }
       ]'
-    depends_on:
-      - database
-    links:
-      - database
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/grafana:/srv
@@ -73,19 +71,19 @@ services:
       mon:
         ipv4_address: 192.168.10.10
 
-  database:
-    restart: always
-    image: bodsch/docker-mysql:1708-35.1
-    container_name: database
-    hostname: database
-    ports:
-      - 3306:3306
-    environment:
-      # MYSQL_SYSTEM_USER:
-      MYSQL_ROOT_PASS: database.pass
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/database:/srv
-    networks:
-      mon:
-        ipv4_address: 192.168.10.5
+#  database:
+#    restart: always
+#    image: bodsch/docker-mysql:1708-35.1
+#    container_name: database
+#    hostname: database
+#    ports:
+#      - 3306:3306
+#    environment:
+#      # MYSQL_SYSTEM_USER:
+#      MYSQL_ROOT_PASS: database.pass
+#    volumes:
+#      - /etc/localtime:/etc/localtime:ro
+#      - /tmp/docker-data/database:/srv
+#    networks:
+#      mon:
+#        ipv4_address: 192.168.10.5

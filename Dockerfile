@@ -8,18 +8,20 @@ ENV \
   ALPINE_VERSION="v3.6" \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
+  GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-09-12" \
-  GRAFANA_VERSION="4.5.0-pre1" \
+  BUILD_DATE="2017-09-19" \
+  BUILD_TYPE="git" \
+  GRAFANA_VERSION="4.6.0-pre1" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_ADD="ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
+  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
   APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
 
 EXPOSE 3000
 
 LABEL \
-  version="1709-37" \
+  version="1709" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
@@ -39,9 +41,6 @@ RUN \
   echo "# http://${ALPINE_MIRROR}/alpine/edge/community"              >> /etc/apk/repositories && \
   apk --no-cache update && \
   apk --no-cache upgrade && \
-  #
-  # build packages
-  #
   apk --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
@@ -61,10 +60,17 @@ RUN \
   echo "get grafana sources ..." && \
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
+  #
+  # build stable packages
+  if [ "${BUILD_TYPE}" == "stable" ] ; then \
+    echo "switch to stable Tag v${GRAFANA_VERSION}" && \
+    git checkout tags/v${GRAFANA_VERSION} 2> /dev/null ; \
+  fi && \
+  #
   echo "grafana setup .." && \
-  go run build.go setup  && \
+  go run build.go setup  2> /dev/null && \
   echo "grafana build .." && \
-  go run build.go build && \
+  go run build.go build  2> /dev/null && \
   unset GOMAXPROCS && \
   #
   # build frontend

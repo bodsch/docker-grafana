@@ -58,54 +58,19 @@ kill_grafana() {
 
   if [ ! -z "${grafana_pid}" ]
   then
-    kill -9 ${grafana_pid}
+    kill -9 ${grafana_pid} > /dev/null 2> /dev/null
 
     sleep 2s
   fi
 }
 
 
-create_api_key() {
-
-  if [ -f ${WORK_DIR}/api_key ]
-  then
-    echo " [i] read API key"
-
-    API_KEY=$(cat ${WORK_DIR}/api_key)
-
-    export API_KEY
-  else
-    echo " [i] create API key"
-
-    curl_opts="--silent --user admin:admin"
-
-    data=$(curl ${curl_opts} \
-      --silent \
-      --request POST \
-      --header 'Content-Type: application/json;charset=UTF-8' \
-      --data '{ "name": "admin", "role": "Admin" }' \
-      http://localhost:3000/api/auth/keys)
-
-    name=$(echo ${data} | jq  --raw-output '.name')
-    key=$(echo ${data} | jq  --raw-output '.key')
-
-    echo ${key} >> ${WORK_DIR}/api_key
-  fi
-}
-
 
 update_organisation() {
 
   echo " [i] updating organistation to '${ORGANISATION}'"
 
-  curl_opts="--silent"
-
-  if [ -z ${API_KEY} ]
-  then
-    curl_opts="${curl_opts} --user admin:admin"
-  else
-    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
-  fi
+  curl_opts="--silent ${CURL_USER}"
 
   data=$(curl ${curl_opts} http://localhost:3000/api/org)
 
@@ -127,14 +92,7 @@ update_datasources() {
 
   echo " [i] updating datasources"
 
-  curl_opts="--silent"
-
-  if [ -z ${API_KEY} ]
-  then
-    curl_opts="${curl_opts} --user admin:admin"
-  else
-    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
-  fi
+  curl_opts="--silent ${CURL_USER}"
 
   datasource_count=$(curl ${curl_opts} 'http://localhost:3000/api/datasources' | json_reformat | grep -c "id")
 
@@ -159,6 +117,19 @@ update_datasources() {
         --request PUT \
         --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
         http://localhost:3000/api/datasources/${id})
+
+      message=
+
+      if [ $(echo "${data}" | json_reformat | grep -c "message") -gt 0 ]
+      then
+        message=$(echo "${data}" | jq --raw-output '.message')
+      fi
+
+      if [ -z "${message}" ]
+      then
+        # possible okay
+        :
+      fi
 
     done
   else
@@ -196,263 +167,24 @@ update_datasources() {
 }
 
 
-ldap_authentication() {
-
-  ldap=$(echo "${LDAP}"  | jq '.')
-
-  if [ ! -z "${ldap}" ]
-  then
-    echo " [i] create LDAP configuration"
-    . /init/auth_ldap.sh
-
-    echo "${ldap}" | jq --compact-output --raw-output '.[]' | while IFS='' read u
-    do
-      server=$(echo "${u}" | jq .server)
-      port=$(echo "${u}" | jq .port)
-      bind_dn=$(echo "${u}" | jq .bind_dn)
-      bind_password=$(echo "${u}" | jq .bind_password)
-      base_dn=$(echo "${u}" | jq .base_dn)
-      group_dn=$(echo "${u}" | jq .group_dn)
-
-      ldap_configuation "${server}" "${port}" "${bind_dn}", "${bind_password}" "${base_dn}" "${group_dn}"
-    done
-
-  fi
-
-#   if [ ! -z "${users}" ]
-#   then
-#
-#     echo " [i] create users"
-#
-#     echo "${users}" | jq --compact-output --raw-output '.[]' | while IFS='' read u
-#     do
-#       username=$(echo "${u}" | jq .username)
-#       password=$(echo "${u}" | jq .password)
-#       email=$(echo "${u}" | jq .email)
-#       role=$(echo "${u}" | jq .role)
-#
-#       insert_user "${username}" "${password}" "${email}", "${role}"
-#     done
-#   fi
-}
-
-
-insert_user() {
-
-  local user="${1}"
-  local password="${2}"
-  local email="${3}"
-  local role="${4}"
-
-  local curl_opts="--silent --header 'Content-Type: application/json;charset=UTF-8'"
-
-  [ -z ${password} ] && password=${user}
-  [ -z ${email} ] && email="${user}@foo-bar.tld"
-  [ -z ${role} ] && role="viewer"
-
-  if [ ${#password} -lt 8 ]
-  then
-    echo " skip user '${user}'"
-    echo " [E] Passwordlength is too short: password has ${#password} characters, please use min. 8 chars"
-
-    continue
-  fi
-
-  echo "      - '${user}'"
-
-  data=$(curl \
-    ${curl_opts} \
-    --request POST \
-    --data "{ \"name\": \"${user}\", \"email\": \"${email}\", \"login\": \"${user}\", \"password\": \"${password}\" }" \
-    http://localhost:3000/api/admin/users)
-
-  id=$(echo ${data} | jq  --raw-output '.id')
-  message=$(echo ${data} | jq  --raw-output '.message')
-
-  if [ "${message}" = "User created" ]
-  then
-    # user successful created
-    if [ $(echo "${role}" | tr '[:upper:]' '[:lower:]') == "admin" ]
-    then
-
-      data=$(curl \
-        ${curl_opts} \
-        --request PATCH \
-        --data "{ \"role\": \"Admin\" }" \
-        http://localhost:3000/api/org/users/${id})
-
-      data=$(curl \
-        ${curl_opts} \
-        --request PUT \
-        --data "{ \"isGrafanaAdmin\": true }" \
-        http://localhost:3000/api/admin/users/${id}/permissions)
-
-    fi
-  fi
-
-}
-
-
-handle_users() {
-
-  echo " [i] create users"
-
-  users=$(echo "${USERS}"  | jq '.')
-
-  if [ ! -z "${users}" ]
-  then
-
-    echo "${users}" | jq --compact-output --raw-output '.[]' | while IFS='' read u
-    do
-      username=$(echo "${u}" | jq .username)
-      password=$(echo "${u}" | jq .password)
-      email=$(echo "${u}" | jq .email)
-      role=$(echo "${u}" | jq .role)
-
-      insert_user "${username}" "${password}" "${email}", "${role}"
-    done
-  fi
-
-
-  curl_opts="--silent --header 'Content-Type: application/json;charset=UTF-8'"
-
-  if [ -z ${API_KEY} ]
-  then
-    curl_opts="${curl_opts} --user admin:admin"
-  else
-    curl_opts="${curl_opts} --header 'Authorization: Bearer ${API_KEY}'"
-  fi
-
-  users=
-
-  if [ -n "${GRAFANA_USERS}" ]
-  then
-    users=$(echo ${GRAFANA_USERS} | sed -e 's/,/ /g' -e 's/\s+/\n/g' | uniq)
-
-    if [ -z "${users}" ]
-    then
-      echo " [i] no user found, skip .."
-
-      return
-    else
-      for u in ${users}
-      do
-
-        user=$(echo "${u}" | cut -d: -f1)
-        pass=$(echo "${u}" | cut -d: -f2)
-        email=$(echo "${u}" | cut -d: -f3)
-        role=$(echo "${u}" | cut -d: -f4)
-
-        [ -z ${pass} ] && pass=${user}
-        [ -z ${email} ] && email="${user}@foo-bar.tld"
-        [ -z ${role} ] && role="viewer"
-
-        if [ ${#pass} -lt 8 ]
-        then
-          echo " [E] Passwordlength for user '${user}' is too short: password has ${#pass} characters, please use min. 8 chars"
-          continue
-        fi
-
-        echo "      - '${user}'"
-
-        data=$(curl \
-          ${curl_opts} \
-          --request POST \
-          --data "{ \"name\": \"${user}\", \"email\": \"${email}\", \"login\": \"${user}\", \"password\": \"${pass}\" }" \
-          http://localhost:3000/api/admin/users)
-
-        id=$(echo ${data} | jq  --raw-output '.id')
-        message=$(echo ${data} | jq  --raw-output '.message')
-
-        if [ "${message}" = "User created" ]
-        then
-          # user successful created
-          if [ $(echo "${role}" | tr '[:upper:]' '[:lower:]') == "admin" ]
-          then
-
-            data=$(curl \
-              ${curl_opts} \
-              --request PATCH \
-              --data "{ \"role\": \"Admin\" }" \
-              http://localhost:3000/api/org/users/${id})
-
-            data=$(curl \
-              ${curl_opts} \
-              --request PUT \
-              --header 'Content-Type: application/json;charset=UTF-8' \
-              --data "{ \"isGrafanaAdmin\": true }" \
-              http://localhost:3000/api/admin/users/${id}/permissions)
-
-          fi
-        fi
-
-      done
-
-      # change admin password
-      # PUT /api/admin/users/:id/password
-
-      echo " [i] change default 'admin' password"
-      data=$(curl \
-        ${curl_opts} \
-        --header 'Content-Type: application/json;charset=UTF-8' \
-        --request PUT \
-        --data '{"password":"grafana-admin"}' \
-        http://localhost:3000/api/admin/users/1/password)
-
-#       # change permissions from 'Admin' to 'Viewer'
-#       # PUT /api/admin/users/:id/permissions
-#       curl \
-#         ${curl_opts} \
-#         --request PUT \
-#         --header 'Content-Type: application/json;charset=UTF-8' \
-#         --data '{"isGrafanaAdmin": false}' \
-#         http://localhost:3000/api/admin/users/1/permissions
-#
-#       # alternative:
-#       # DELETE admin user
-#       # DELETE /api/admin/users/:id
-#       curl \
-#         ${curl_opts} \
-#         --request DELETE \
-#         --header 'Content-Type: application/json;charset=UTF-8' \
-#         http://localhost:3000/api/admin/users/1
-    fi
-  fi
-}
-
-
-insert_plugins() {
-
-  local plugins="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel"
-
-  for p in ${plugins}
-  do
-    /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins"  plugins install ${p}
-  done
-
-}
-
-
-update_plugins() {
-
-  echo " [i] update plugins"
-
-  /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins upgrade-all
-
-  echo " [i] done"
-}
-
+. /init/plugins.sh
+. /init/authentications.sh
+. /init/security.sh
 
 start_grafana
 
-create_api_key
+validate_api_access
+change_admin_password
+# create_api_key
 
 update_organisation
-# update_datasources
-update_authentication
-handle_users
+update_datasources
+
+ldap_authentication
+
+create_local_users
 
 # insert_plugins
-# update_plugins
+update_plugins
 
 kill_grafana
