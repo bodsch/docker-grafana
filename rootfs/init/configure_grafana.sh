@@ -88,86 +88,8 @@ update_organisation() {
 }
 
 
-update_datasources() {
-
-  echo " [i] updating datasources"
-
-  curl_opts="--silent ${CURL_USER}"
-
-  datasource_count=$(curl ${curl_opts} 'http://localhost:3000/api/datasources' | json_reformat | grep -c "id")
-
-  if [ ${datasource_count} -gt 0 ]
-  then
-
-    echo " [i] update data sources"
-
-    for c in $(seq 1 ${datasource_count})
-    do
-      # get type and id - we need it later!
-      data=$(curl ${curl_opts} http://localhost:3000/api/datasources/${c})
-
-      id=$(echo ${data} | jq  --raw-output '.id')
-      name=$(echo ${data} | jq --raw-output '.name')
-      type=$(echo ${data} | jq --raw-output '.type')
-      default=$(echo ${data} | jq --raw-output '.isDefault')
-
-      data=$(curl \
-        ${curl_opts} \
-        --header 'Content-Type: application/json;charset=UTF-8' \
-        --request PUT \
-        --data-binary "{\"name\":\"${name}\",\"type\":\"${type}\",\"isDefault\":${default},\"access\":\"proxy\",\"url\":\"http://${GRAPHITE_HOST}:${GRAPHITE_HTTP_PORT}\"}" \
-        http://localhost:3000/api/datasources/${id})
-
-      message=
-
-      if [ $(echo "${data}" | json_reformat | grep -c "message") -gt 0 ]
-      then
-        message=$(echo "${data}" | jq --raw-output '.message')
-      fi
-
-      if [ -z "${message}" ]
-      then
-        # possible okay
-        :
-      fi
-
-    done
-  else
-
-    echo " [i] create data sources"
-
-    for i in graphite events
-    do
-      cp /init/config/template/datasource.tpl /init/config/template/datasource-${i}.json
-
-      if [ "${i}" == "graphite" ]
-      then
-        DATABASE_DEFAULT="true"
-      else
-        DATABASE_DEFAULT="false"
-      fi
-
-      sed -i \
-        -e "s/%GRAPHITE_HOST%/${GRAPHITE_HOST}/" \
-        -e "s/%GRAPHITE_PORT%/${GRAPHITE_HTTP_PORT}/" \
-        -e "s/%GRAPHITE_DATABASE%/${i}/" \
-        -e "s/%DATABASE_DEFAULT%/${DATABASE_DEFAULT}/" \
-        /init/config/template/datasource-${i}.json
-
-      data=$(curl \
-        ${curl_opts} \
-        --header 'Content-Type: application/json;charset=UTF-8' \
-        --request POST \
-        --data-binary @/init/config/template/datasource-${i}.json \
-        http://localhost:3000/api/datasources/)
-    done
-  fi
-
-  sleep 2s
-}
-
-
 . /init/plugins.sh
+. /init/datasources.sh
 . /init/authentications.sh
 . /init/security.sh
 
@@ -177,14 +99,14 @@ validate_api_access
 change_admin_password
 # create_api_key
 
-update_organisation
+# # update_organisation
 update_datasources
 
-ldap_authentication
+# # ldap_authentication
 
-create_local_users
+# # create_local_users
 
 # insert_plugins
-update_plugins
+# # update_plugins
 
 kill_grafana
