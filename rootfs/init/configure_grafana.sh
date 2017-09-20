@@ -99,14 +99,14 @@ validate_api_access
 change_admin_password
 # create_api_key
 
-# # update_organisation
+update_organisation
 update_datasources
 
-# # ldap_authentication
+ldap_authentication
 
-# # create_local_users
+create_local_users
 
 # insert_plugins
-# # update_plugins
+update_plugins
 
 kill_grafana

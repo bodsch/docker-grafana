@@ -65,59 +65,37 @@ services:
         }
       ]'
       DATASOURCES: '{
-  "influx": [
-    {
-      "telegraf": {
-        "host": "localhost",
-        "port": 8086,
-        "database": "telegraf",
-        "basic_auth": {
-          "user": "foo",
-          "password": "bar"
-        },
-        "default": false
-      }
-    },
-    {
-      "influxdb": {
-        "host": "localhost",
-        "port": 8086,
-        "database": "graphite",
-        "basic_auth": {
-          "user": "foo",
-          "password": "bar"
-        },
-        "default": false
-      }
-    }
-  ],
-  "graphite": [
-    {
-      "graphite": {
-        "host": "localhost",
-        "port": 2003,
-        "database": "telegraf",
-        "basic_auth": {
-          "user": "foo",
-          "password": "bar"
-        },
-        "default": false
-      }
-    },
-    {
-      "events": {
-        "host": "localhost",
-        "port": 2003,
-        "database": "graphite",
-        "basic_auth": {
-          "user": "foo",
-          "password": "bar"
-        },
-        "default": false
-      }
-    }
-  ]
-}'
+        "influxdb": [
+          {
+            "name": "telegraf",
+            "host": "localhost",
+            "database": "telegraf"
+          },
+          {
+            "name": "influxdb",
+            "host": "localhost",
+            "port": 8086,
+            "database": "influxdb",
+            "default": false
+            }
+        ],
+        "graphite": [
+          {
+            "name": "graphite",
+            "host": "localhost",
+            "port": 2003,
+            "database": "graphite",
+            "default": true
+          },
+          {
+            "name": "events",
+            "host": "localhost",
+            "port": 2003,
+            "database": "events",
+            "default": false
+          }
+        ]
+      }'
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/grafana:/srv
