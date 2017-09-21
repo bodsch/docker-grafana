@@ -76,7 +76,7 @@ change_admin_password() {
     # change admin password
     # PUT /api/admin/users/:id/password
 
-    echo " [i] change default 'admin' password"
+    echo -n " [i] change default 'admin' password  "
     data=$(curl \
       ${curl_opts} \
       --header 'Content-Type: application/json;charset=UTF-8' \
@@ -89,7 +89,7 @@ change_admin_password() {
 
     if [ "${message}" = "User password updated" ]
     then
-      echo "  successful"
+      echo " ... successful"
 
       echo ${ADMIN_PASSWORD} > ${WORK_DIR}/admin
 
