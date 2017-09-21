@@ -110,8 +110,42 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 |                                    |                      | `    "email": "",`                                              |
 |                                    |                      | `    "role": "Viewer"`                                          |
 |                                    |                      | `}]'`                                                           |
-
-
+|                                    |                      |                                                                 |
+| `DATASOURCES`                      | -                    | a json to create some backend datasources.                      |
+|                                    |                      | currently, i support only `influxdb` and `graphite`             |
+|                                    |                      | `{`                                                             |
+|                                    |                      | `  "influxdb": [`                                               |
+|                                    |                      | `    {`                                                         |
+|                                    |                      | `      "name": "telegraf",`                                     |
+|                                    |                      | `      "host": "localhost",`                                    |
+|                                    |                      | `      "database": "telegraf"`                                  |
+|                                    |                      | `    },`                                                        |
+|                                    |                      | `    {`                                                         |
+|                                    |                      | `      "name": "influxdb",`                                     |
+|                                    |                      | `      "host": "localhost",`                                    |
+|                                    |                      | `      "port": 8086,`                                           |
+|                                    |                      | `      "database": "influxdb",`                                 |
+|                                    |                      | `      "default": false`                                        |
+|                                    |                      | `      }`                                                       |
+|                                    |                      | `  ],`                                                          |
+|                                    |                      | `  "graphite": [`                                               |
+|                                    |                      | `    {`                                                         |
+|                                    |                      | `      "name": "graphite",`                                     |
+|                                    |                      | `      "host": "localhost",`                                    |
+|                                    |                      | `      "port": 2003,`                                           |
+|                                    |                      | `      "database": "graphite",`                                 |
+|                                    |                      | `      "default": true`                                         |
+|                                    |                      | `    },`                                                        |
+|                                    |                      | `    {`                                                         |
+|                                    |                      | `      "name": "events",`                                       |
+|                                    |                      | `      "host": "localhost",`                                    |
+|                                    |                      | `      "port": 2003,`                                           |
+|                                    |                      | `      "database": "events",`                                   |
+|                                    |                      | `      "default": false`                                        |
+|                                    |                      | `    }`                                                         |
+|                                    |                      | `  ]`                                                           |
+|                                    |                      | `}`                                                             |
+|                                    |                      |                                                                 |
 
 
 # includes

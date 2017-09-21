@@ -64,6 +64,38 @@ services:
           "role": "Viewer"
         }
       ]'
+      DATASOURCES: '{
+        "influxdb": [
+          {
+            "name": "telegraf",
+            "host": "localhost",
+            "database": "telegraf"
+          },
+          {
+            "name": "influxdb",
+            "host": "localhost",
+            "port": 8086,
+            "database": "influxdb",
+            "default": false
+            }
+        ],
+        "graphite": [
+          {
+            "name": "graphite",
+            "host": "localhost",
+            "port": 2003,
+            "database": "graphite",
+            "default": true
+          },
+          {
+            "name": "events",
+            "host": "localhost",
+            "port": 2003,
+            "database": "events",
+            "default": false
+          }
+        ]
+      }'
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/grafana:/srv
