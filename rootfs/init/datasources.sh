@@ -58,7 +58,7 @@ insert_datasource () {
 
 EOF
 
-  echo -n "  - ${type}: ${name}  "
+  echo -n "     - ${type}: ${name}"
 
   data=$(curl \
     ${curl_opts} \
@@ -73,7 +73,7 @@ EOF
 
   if [ "${message}" = "Datasource added" ]
   then
-    echo " ... successful"
+    echo "    ... successful"
   fi
 }
 
@@ -112,8 +112,19 @@ read_datasources() {
     do
       echo "${DATASOURCES}" | jq --compact-output --raw-output ".${t}" | while IFS='' read d
       do
+
+        if [[ ${d} == null ]]
+        then
+          continue
+        fi
+
         echo "${d}" | jq --compact-output --raw-output ".[]" | while IFS='' read x
         do
+
+          if [[ ${x} == null ]]
+          then
+            continue
+          fi
 
           name=$(echo "${x}" | jq --raw-output .name)
           host=$(echo "${x}" | jq --raw-output .host)

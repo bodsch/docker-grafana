@@ -58,7 +58,7 @@ kill_grafana() {
 
   if [ ! -z "${grafana_pid}" ]
   then
-    kill -9 ${grafana_pid} > /dev/null 2> /dev/null
+    kill -15 ${grafana_pid} > /dev/null 2> /dev/null
 
     sleep 2s
   fi
@@ -76,7 +76,7 @@ update_organisation() {
 
   name=$(echo ${data} | jq --raw-output '.name')
 
-  if [ "${name}" != "${ORGANISATION}"  ]
+  if [ "${name}" != "${ORGANISATION}" ]
   then
     data=$(curl \
       ${curl_opts} \
@@ -92,6 +92,7 @@ update_organisation() {
 . /init/datasources.sh
 . /init/authentications.sh
 . /init/security.sh
+. /init/qa.sh
 
 start_grafana
 
@@ -108,5 +109,7 @@ create_local_users
 
 # insert_plugins
 update_plugins
+
+test_import_dashboards
 
 kill_grafana
