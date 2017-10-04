@@ -68,7 +68,16 @@ validate_api_access() {
 
 change_admin_password() {
 
-  if ( [[ ! -z ${ADMIN_PASSWORD} ]] || [[ ${ADMIN_PASSWORD} != "" ]] || [[ ! -f ${WORK_DIR}/admin ]] )
+  if [ -f ${WORK_DIR}/admin ]
+  then
+    # already changed
+    ADMIN_PASSWORD=$(cat ${WORK_DIR}/admin)
+    CURL_USER=$(echo ${CURL_USER} | sed "s|:.*|:${ADMIN_PASSWORD}|g")
+    export CURL_USER
+    return
+  fi
+
+  if ( [[ ! -z ${ADMIN_PASSWORD} ]] || [[ ${ADMIN_PASSWORD} != "" ]] )
   then
 
     curl_opts="--silent ${CURL_USER}"
