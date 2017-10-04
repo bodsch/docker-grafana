@@ -125,7 +125,7 @@ insert_user() {
     continue
   fi
 
-  echo "      - '${user}'"
+  echo "     - '${user}'"
 
   data=$(curl \
     ${curl_opts} \

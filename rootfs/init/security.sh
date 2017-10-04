@@ -13,7 +13,7 @@ validate_api_access() {
     basic_credentials+=("--header \"Authorization: Bearer ${API_KEY}\"")
   fi
 
-  if [ ${ADMIN_PASSWORD} != "" ]
+  if ( [[ ! -z ${ADMIN_PASSWORD} ]] || [[ ${ADMIN_PASSWORD} != "" ]] )
   then
     basic_credentials+=("--user admin:${ADMIN_PASSWORD}")
   fi
@@ -68,7 +68,16 @@ validate_api_access() {
 
 change_admin_password() {
 
-  if ( [ ${ADMIN_PASSWORD} !=  "" ] || [ ! -f ${WORK_DIR}/admin ] )
+  if [ -f ${WORK_DIR}/admin ]
+  then
+    # already changed
+    ADMIN_PASSWORD=$(cat ${WORK_DIR}/admin)
+    CURL_USER=$(echo ${CURL_USER} | sed "s|:.*|:${ADMIN_PASSWORD}|g")
+    export CURL_USER
+    return
+  fi
+
+  if ( [[ ! -z ${ADMIN_PASSWORD} ]] || [[ ${ADMIN_PASSWORD} != "" ]] )
   then
 
     curl_opts="--silent ${CURL_USER}"

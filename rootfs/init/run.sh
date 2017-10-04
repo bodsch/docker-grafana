@@ -47,6 +47,11 @@ DBA_NAME=
 
 prepare() {
 
+  echo " ---------------------------------------------------"
+  echo "   Grafana ${GRAFANA_VERSION} (${BUILD_TYPE}) build: ${BUILD_DATE}"
+  echo " ---------------------------------------------------"
+  echo ""
+
   [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
 
   if [ "${DATABASE_TYPE}" == "sqlite3" ]

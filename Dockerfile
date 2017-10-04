@@ -10,9 +10,9 @@ ENV \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-09-19" \
+  BUILD_DATE="2017-09-28" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.5.0" \
+  GRAFANA_VERSION="4.5.2" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
   APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \

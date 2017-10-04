@@ -41,44 +41,15 @@ services:
       # DATABASE_GRAFANA_PASS: grafana
       # GRAFANA_USERS: 'coremedia:coremedia::admin'
       ADMIN_PASSWORD: grafana_admin
-      LDAP: '{
-        "server":"${LDAP_SERVER}",
-        "port":"${LDAP_PORT}",
-        "bind_dn": "${LDAP_BIND_DN}",
-        "bind_password": "${LDAP_BIND_PASSWORD}",
-        "base_dn": "${LDAP_BASE_DN}",
-        "group_dn": "${LDAP_GROUP_DN}",
-        "search_filter": "${LDAP_SEARCH_FILTER}"
-      }'
       USERS: '[
-        {
-          "username": "coremedia",
-          "password": "coremedia",
-          "email": "",
-          "role": "Admin"
-        },
         {
           "username": "foo",
           "password": "bar11bar",
           "email": "",
-          "role": "Viewer"
+          "role": "Admin"
         }
       ]'
       DATASOURCES: '{
-        "influxdb": [
-          {
-            "name": "telegraf",
-            "host": "localhost",
-            "database": "telegraf"
-          },
-          {
-            "name": "influxdb",
-            "host": "localhost",
-            "port": 8086,
-            "database": "influxdb",
-            "default": false
-            }
-        ],
         "graphite": [
           {
             "name": "graphite",
@@ -86,13 +57,6 @@ services:
             "port": 2003,
             "database": "graphite",
             "default": true
-          },
-          {
-            "name": "events",
-            "host": "localhost",
-            "port": 2003,
-            "database": "events",
-            "default": false
           }
         ]
       }'
