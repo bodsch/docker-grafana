@@ -10,7 +10,7 @@ ENV \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-09-28" \
+  BUILD_DATE="2017-10-05" \
   BUILD_TYPE="stable" \
   GRAFANA_VERSION="4.5.2" \
   PHANTOMJS_VERSION="2.11" \
@@ -21,7 +21,7 @@ ENV \
 EXPOSE 3000
 
 LABEL \
-  version="1709" \
+  version="1710" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
