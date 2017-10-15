@@ -89,27 +89,27 @@ update_organisation() {
 
 
 . /init/plugins.sh
-. /init/datasources.sh
+# . /init/datasources.sh
 . /init/authentications.sh
-. /init/security.sh
-. /init/qa.sh
+# . /init/security.sh
+# . /init/qa.sh
 
 start_grafana
 
-validate_api_access
-change_admin_password
+# validate_api_access
+# change_admin_password
 # create_api_key
 
-update_organisation
-update_datasources
+# update_organisation
+# update_datasources
 
 ldap_authentication
 
-create_local_users
+# create_local_users
 
 # insert_plugins
 update_plugins
 
-test_import_dashboards
+# test_import_dashboards
 
 kill_grafana

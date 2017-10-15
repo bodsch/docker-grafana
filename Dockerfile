@@ -111,9 +111,9 @@ RUN \
   #
   # and clean up
   #
-  apk --quiet --purge del ${APK_BUILD_BASE} && \
   go clean -i -r && \
   npm ls -gp --depth=0 | awk -F/node_modules/ '{print $2}' | grep -vE '^(npm|)$' | xargs -r npm -g rm && \
+  apk --quiet --purge del ${APK_BUILD_BASE} && \
   rm -rf \
     ${GOPATH} \
     /usr/lib/go \
