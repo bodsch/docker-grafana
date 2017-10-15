@@ -1,22 +1,22 @@
 
-FROM alpine:3.6
+FROM alpine:edge
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
-  ALPINE_VERSION="v3.6" \
+  ALPINE_VERSION="edge" \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-10-05" \
+  BUILD_DATE="2017-10-15" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.5.2" \
+  GRAFANA_VERSION="4.6.0-beta1" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
   APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
-  APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
+  APK_BUILD_BASE="g++ git go make libuv nodejs-current nodejs-current-npm"
 
 EXPOSE 3000
 
@@ -67,6 +67,7 @@ RUN \
   fi && \
   #
   echo "grafana setup .." && \
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   go run build.go setup  2> /dev/null && \
   echo "grafana build .." && \
   go run build.go build  2> /dev/null && \
@@ -86,10 +87,14 @@ RUN \
   #
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
+  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
-  cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
-  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+  if [ -d public ] ; then \
+    cp -ar ${GOPATH}/src/github.com/grafana/grafana/public           /usr/share/grafana/ ; \
+  elif [ -d public_gen ] ; then \
+    cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen       /usr/share/grafana/public ; \
+  fi && \
   #
   # create needed directorys
   #
@@ -106,9 +111,9 @@ RUN \
   #
   # and clean up
   #
-  npm ls -gp --depth=0 | awk -F/node_modules/ '{print $2}' | grep -vE '^(npm|)$' | xargs -r npm -g rm && \
-  go clean -i -r && \
   apk --quiet --purge del ${APK_BUILD_BASE} && \
+  go clean -i -r && \
+  npm ls -gp --depth=0 | awk -F/node_modules/ '{print $2}' | grep -vE '^(npm|)$' | xargs -r npm -g rm && \
   rm -rf \
     ${GOPATH} \
     /usr/lib/go \
