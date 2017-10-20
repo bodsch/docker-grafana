@@ -5,7 +5,25 @@ A Docker container for an (currently) actual Grafana Webinterface build from Sou
 
 this container use phantomjs from [Overbryd](https://github.com/Overbryd/docker-phantomjs-alpine)
 
-# Status
+# A request from me
+
+**PLEASE** Don't report Bugs for this Container to the Grafana Crew!
+
+They People makes a great Job and i produce also Bugs.
+
+Use the Issue Tracker and give me Feedback!
+
+
+# Contributing
+
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin my-new-feature`)
+5. Create new Pull Request
+
+
+# Current Status
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/bodsch/docker-grafana.svg?branch)][hub]
 [![Image Size](https://images.microbadger.com/badges/image/bodsch/docker-grafana.svg?branch)][microbadger]
@@ -64,8 +82,9 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 | Environmental Variable             | Default Value        | Description                                                     |
 | :--------------------------------- | :-------------       | :-----------                                                    |
 | `DATABASE_TYPE`                    | `sqlite3`            | supportet Types are `mysql` and `sqlite3`                       |
-| `ORGANISATION`                     | `Docker`             | to change the Organization Name                                 |
 | `URL_PATH`                         | `/`                  | to change the Path in the URL whe they run behind a proxy (example: `/grafana/`) |
+|                                    |                      | |
+| `ORGANISATION`                     | `Docker`             | |
 |                                    |                      |                                                                 |
 | `MYSQL_HOST`                       | -                    | MySQL Host                                                      |
 | `MYSQL_PORT`                       | `3306`               | MySQL Port                                                      |
@@ -74,17 +93,11 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 | `SQLITE_PATH`                      | -                    | set the Storage-Path for a `sqlite` Database                    |
 | `DATABASE_GRAFANA_PASS`            | `grafana`            | the Database Password for Grafana                               |
 |                                    |                      |                                                                 |
-| `GRAPHITE_HOST`                    | -                    | the graphite Hostname                                           |
-| `GRAPHITE_PORT`                    | `2003`               | the graphite Port                                               |
-| `GRAPHITE_HTTP_PORT`               | `8080`               | the graphite HTTP Port                                          |
-|                                    |                      |                                                                 |
 | `CARBON_HOST`                      | -                    | the carbon Hostname to send internal Grafana metrics, can be identical with `GRAPHITE_HOST` |
 | `CARBON_PORT`                      | `2003`               | the carbon Port                                                 |
 |                                    |                      |                                                                 |
 | `MEMCACHE_HOST`                    | -                    | the memcache Hostname to store Sessions                         |
 | `MEMCACHE_PORT`                    | `11211`              | the memcache Port                                               |
-|                                    |                      |                                                                 |
-| `ADMIN_PASSWORD`                   | -                    | change the default admin password                               |
 |                                    |                      |                                                                 |
 | `LDAP`                             | -                    | a json with LDAP configurations:                                |
 |                                    |                      | `'{`                                                            |
@@ -96,55 +109,6 @@ You can find the Container also at  [DockerHub](https://hub.docker.com/r/bodsch/
 |                                    |                      | `    "group_dn": "${LDAP_GROUP_DN}",`                           |
 |                                    |                      | `    "search_filter": "${LDAP_SEARCH_FILTER}"`                  |
 |                                    |                      | `  }'`                                                          |
-|                                    |                      |                                                                 |
-| `USERS`                            | -                    | a json to create local users                                    |
-|                                    |                      | `'[{`                                                           |
-|                                    |                      | `    "username": "grafana",`                                    |
-|                                    |                      | `    "password": "to-sec3t4y0u",`                               |
-|                                    |                      | `    "email": "",`                                              |
-|                                    |                      | `    "role": "Admin"`                                           |
-|                                    |                      | `  },`                                                          |
-|                                    |                      | `  {`                                                           |
-|                                    |                      | `    "username": "foo",`                                        |
-|                                    |                      | `    "password": "bar11bar",`                                   |
-|                                    |                      | `    "email": "",`                                              |
-|                                    |                      | `    "role": "Viewer"`                                          |
-|                                    |                      | `}]'`                                                           |
-|                                    |                      |                                                                 |
-| `DATASOURCES`                      | -                    | a json to create some backend datasources.                      |
-|                                    |                      | currently, i support only `influxdb` and `graphite`             |
-|                                    |                      | `{`                                                             |
-|                                    |                      | `  "influxdb": [`                                               |
-|                                    |                      | `    {`                                                         |
-|                                    |                      | `      "name": "telegraf",`                                     |
-|                                    |                      | `      "host": "localhost",`                                    |
-|                                    |                      | `      "database": "telegraf"`                                  |
-|                                    |                      | `    },`                                                        |
-|                                    |                      | `    {`                                                         |
-|                                    |                      | `      "name": "influxdb",`                                     |
-|                                    |                      | `      "host": "localhost",`                                    |
-|                                    |                      | `      "port": 8086,`                                           |
-|                                    |                      | `      "database": "influxdb",`                                 |
-|                                    |                      | `      "default": false`                                        |
-|                                    |                      | `      }`                                                       |
-|                                    |                      | `  ],`                                                          |
-|                                    |                      | `  "graphite": [`                                               |
-|                                    |                      | `    {`                                                         |
-|                                    |                      | `      "name": "graphite",`                                     |
-|                                    |                      | `      "host": "localhost",`                                    |
-|                                    |                      | `      "port": 2003,`                                           |
-|                                    |                      | `      "database": "graphite",`                                 |
-|                                    |                      | `      "default": true`                                         |
-|                                    |                      | `    },`                                                        |
-|                                    |                      | `    {`                                                         |
-|                                    |                      | `      "name": "events",`                                       |
-|                                    |                      | `      "host": "localhost",`                                    |
-|                                    |                      | `      "port": 2003,`                                           |
-|                                    |                      | `      "database": "events",`                                   |
-|                                    |                      | `      "default": false`                                        |
-|                                    |                      | `    }`                                                         |
-|                                    |                      | `  ]`                                                           |
-|                                    |                      | `}`                                                             |
 |                                    |                      |                                                                 |
 
 
