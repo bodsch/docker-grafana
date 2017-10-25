@@ -12,7 +12,7 @@ ENV \
   TERM=xterm \
   BUILD_DATE="2017-10-15" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.6.0-beta1" \
+  GRAFANA_VERSION="4.6.0-beta3" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
   APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
