@@ -200,7 +200,9 @@ run() {
 
   kill_grafana
 
-  startSupervisor
+  # startSupervisor
+
+  /bin/s6-svscan /etc/s6
 }
 
 run
