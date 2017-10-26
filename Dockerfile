@@ -1,22 +1,22 @@
 
-FROM alpine:edge
+FROM alpine:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
   ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
-  ALPINE_VERSION="edge" \
+  ALPINE_VERSION="v3.6" \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
   BUILD_DATE="2017-10-15" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.6.0-beta1" \
+  GRAFANA_VERSION="4.6.0" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
-  APK_BUILD_BASE="g++ git go make libuv nodejs-current nodejs-current-npm"
+  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen s6 sqlite yajl-tools" \
+  APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
 
 EXPOSE 3000
 
@@ -38,9 +38,30 @@ LABEL \
 RUN \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
-  apk --no-cache update && \
-  apk --no-cache upgrade && \
-  apk --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
+  apk \
+    --no-cache \
+    update && \
+  apk \
+    --no-cache \
+    upgrade && \
+  apk \
+    --no-cache \
+    add ${APK_ADD} && \
+  # to fix this problem with nodejs 8.x:
+  # 'Error relocating /usr/bin/node: uv_fs_copyfile: symbol not found'
+  apk \
+    --no-cache \
+    --update-cache \
+    --repository http://${ALPINE_MIRROR}/alpine/edge/main \
+    --allow-untrusted \
+    add libuv  && \
+  # install newer build tools (go 1.9.x & nodejs 8.6.x) from edge
+  apk \
+    --no-cache \
+    --update-cache \
+    --repository http://${ALPINE_MIRROR}/alpine/edge/community \
+    --allow-untrusted \
+    add ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
   #

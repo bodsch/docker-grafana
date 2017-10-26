@@ -6,5 +6,4 @@ VOLUMES = \
 
 ENV = \
   --env URL_PATH="/" \
-  --env ORGANISATION="Development" \
   --env SQLITE_PATH=""
