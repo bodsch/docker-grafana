@@ -1,0 +1,11 @@
+
+Changes for 4.6
+===============
+
+- 2017-10-20
+  Reduce Environment Variables to the absolut minimum.
+  The Container is now 'stupid'
+  To create or change Users, Datasources or Organisations, your should use an external Client with API Support
+  (e.g. the planned [ruby gem](https://github.com/bodsch/ruby-grafana))
+
+

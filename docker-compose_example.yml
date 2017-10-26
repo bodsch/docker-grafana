@@ -1,15 +1,7 @@
 ---
 version: '2.0'
 
-networks:
-  mon:
-    driver: bridge
-    ipam:
-      config:
-        - subnet: 192.168.10.0/24
-
 services:
-
   grafana:
     restart: always
     build: .
@@ -19,67 +11,16 @@ services:
       - 3000:3000
     environment:
       URL_PATH: /
-      ORGANISATION: Docker
-      ## DATABASE_TYPE: mysql
-      ## MYSQL_HOST: database
+      # DATABASE_TYPE: mysql
+      # MYSQL_HOST: database
       # MYSQL_PORT: 3306
       # MYSQL_ROOT_USER: root
-      ## MYSQL_ROOT_PASS: database.pass
-      # GRAPHITE_HOST: graphite
-      # GRAPHITE_PORT: 2003
-      # GRAPHITE_HTTP_PORT: 8080
-      #
-      # WE USE AN SEPERATE CARBON SERVICE
-      # IF NOT, THEN SET THEN TO $GRAPHITE_HOST
-      # (see above in this configuration part!)
+      # MYSQL_ROOT_PASS: database.pass
       # CARBON_HOST: carbon
       # CARBON_PORT: 2003
       # MEMCACHE_HOST: memcached
       # MEMCACHE_PORT: 11211
-      # REDIS_HOST: redis
-      # REDIS_PORT: 6379
       # DATABASE_GRAFANA_PASS: grafana
-      # GRAFANA_USERS: 'coremedia:coremedia::admin'
-      ADMIN_PASSWORD: grafana_admin
-      USERS: '[
-        {
-          "username": "foo",
-          "password": "bar11bar",
-          "email": "",
-          "role": "Admin"
-        }
-      ]'
-      DATASOURCES: '{
-        "graphite": [
-          {
-            "name": "graphite",
-            "host": "localhost",
-            "port": 2003,
-            "database": "graphite",
-            "default": true
-          }
-        ]
-      }'
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/docker-data/grafana:/srv
-    networks:
-      mon:
-        ipv4_address: 192.168.10.10
-
-#  database:
-#    restart: always
-#    image: bodsch/docker-mysql:1708-35.1
-#    container_name: database
-#    hostname: database
-#    ports:
-#      - 3306:3306
-#    environment:
-#      # MYSQL_SYSTEM_USER:
-#      MYSQL_ROOT_PASS: database.pass
-#    volumes:
-#      - /etc/localtime:/etc/localtime:ro
-#      - /tmp/docker-data/database:/srv
-#    networks:
-#      mon:
-#        ipv4_address: 192.168.10.5
