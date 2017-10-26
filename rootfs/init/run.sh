@@ -113,7 +113,7 @@ start_grafana() {
     waitForDatabase
   fi
 
-  echo " [i] start grafana-server in first time"
+  echo " [i] start grafana-server for the first time to create database schemas and update plugins"
 
   exec /usr/share/grafana/bin/grafana-server \
     -homepath /usr/share/grafana \
@@ -128,7 +128,7 @@ start_grafana() {
     exit 1
   fi
 
-  echo " [i] wait for initalize grafana .. "
+  echo " [i]    wait for initalize grafana .. "
 
   sleep 2s
 
@@ -170,18 +170,6 @@ kill_grafana() {
   fi
 }
 
-
-startSupervisor() {
-
-  if [ -f /etc/supervisord.conf ]
-  then
-    /usr/bin/supervisord -c /etc/supervisord.conf >> /dev/null
-  else
-    echo " [E] no supervisord.conf found"
-    exit 1
-  fi
-}
-
 # -------------------------------------------------------------------------------------------------
 
 run() {
@@ -200,7 +188,7 @@ run() {
 
   kill_grafana
 
-  # startSupervisor
+  echo " [i] start init process ..."
 
   /bin/s6-svscan /etc/s6
 }
