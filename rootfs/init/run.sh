@@ -22,10 +22,6 @@ MYSQL_ROOT_PASS=${MYSQL_ROOT_PASS:-""}
 
 SQLITE_PATH=${SQLITE_PATH:-""}
 
-GRAPHITE_HOST=${GRAPHITE_HOST:-""}
-GRAPHITE_PORT=${GRAPHITE_PORT:-2003}
-GRAPHITE_HTTP_PORT=${GRAPHITE_HTTP_PORT:-8080}
-
 CARBON_HOST=${CARBON_HOST:-""}
 CARBON_PORT=${CARBON_PORT:-2003}
 
@@ -110,17 +106,67 @@ prepare() {
 }
 
 
+start_grafana() {
 
-startSupervisor() {
-
-#   echo -e "\n Starting Supervisor.\n\n"
-
-  if [ -f /etc/supervisord.conf ]
+  if [ "${DATABASE_TYPE}" == "mysql" ]
   then
-    /usr/bin/supervisord -c /etc/supervisord.conf >> /dev/null
+    waitForDatabase
+  fi
+
+  echo " [i] start grafana-server for the first time to create database schemas and update plugins"
+
+  exec /usr/share/grafana/bin/grafana-server \
+    -homepath /usr/share/grafana \
+    -config=${GRAFANA_CONFIG_FILE} \
+    cfg:default.paths.logs=/var/log/grafana &
+
+  if [ $? -eq 0 ]
+  then
+    echo " [i] successful ..."
   else
-    echo " [E] no supervisord.conf found"
+    echo " [E] result code: $?"
     exit 1
+  fi
+
+  echo " [i]    wait for initalize grafana .. "
+
+  sleep 2s
+
+  RETRY=40
+
+  # wait for grafana
+  #
+  until [ ${RETRY} -le 0 ]
+  do
+    grafana_up=$(netstat -tlnp | grep ":3000" | wc -l)
+
+    [ ${grafana_up} -eq 1 ] && break
+
+    echo " [i] waiting for grafana to come up"
+
+    sleep 2s
+    RETRY=$(expr ${RETRY} - 1)
+  done
+
+  if [ $RETRY -le 0 ]
+  then
+    echo " [E] grafana is not successful started :("
+    exit 1
+  fi
+
+  sleep 2s
+}
+
+
+kill_grafana() {
+
+  grafana_pid=$(ps ax | grep grafana | grep -v grep | awk '{print $1}')
+
+  if [ ! -z "${grafana_pid}" ]
+  then
+    kill -15 ${grafana_pid} > /dev/null 2> /dev/null
+
+    sleep 2s
   fi
 }
 
@@ -131,9 +177,20 @@ run() {
   prepare
 
   . /init/database/mysql.sh
-  . /init/configure_grafana.sh
+  . /init/plugins.sh
+  . /init/authentications.sh
 
-  startSupervisor
+  start_grafana
+
+  ldap_authentication
+
+  update_plugins
+
+  kill_grafana
+
+  echo " [i] start init process ..."
+
+  /bin/s6-svscan /etc/s6
 }
 
 run

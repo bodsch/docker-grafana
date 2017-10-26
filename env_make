@@ -6,6 +6,4 @@ VOLUMES = \
 
 ENV = \
   --env URL_PATH="/" \
-  --env ORGANISATION="Development" \
-  --env SQLITE_PATH="" \
-  --env GRAFANA_USERS="foo:barbarbar::admin,bar:barbar:bar@foo.tld:"
+  --env SQLITE_PATH=""

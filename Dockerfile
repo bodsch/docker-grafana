@@ -1,5 +1,5 @@
 
-FROM alpine:3.6
+FROM alpine:latest
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
@@ -10,18 +10,18 @@ ENV \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-09-28" \
+  BUILD_DATE="2017-10-15" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.5.2" \
+  GRAFANA_VERSION="4.6.0" \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen supervisor sqlite yajl-tools" \
+  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen s6 sqlite yajl-tools" \
   APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
 
 EXPOSE 3000
 
 LABEL \
-  version="1709" \
+  version="1710" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
@@ -38,9 +38,30 @@ LABEL \
 RUN \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
   echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
-  apk --no-cache update && \
-  apk --no-cache upgrade && \
-  apk --no-cache add ${APK_ADD} ${APK_BUILD_BASE} && \
+  apk \
+    --no-cache \
+    update && \
+  apk \
+    --no-cache \
+    upgrade && \
+  apk \
+    --no-cache \
+    add ${APK_ADD} && \
+  # to fix this problem with nodejs 8.x:
+  # 'Error relocating /usr/bin/node: uv_fs_copyfile: symbol not found'
+  apk \
+    --no-cache \
+    --update-cache \
+    --repository http://${ALPINE_MIRROR}/alpine/edge/main \
+    --allow-untrusted \
+    add libuv  && \
+  # install newer build tools (go 1.9.x & nodejs 8.6.x) from edge
+  apk \
+    --no-cache \
+    --update-cache \
+    --repository http://${ALPINE_MIRROR}/alpine/edge/community \
+    --allow-untrusted \
+    add ${APK_BUILD_BASE} && \
   #
   # download and install phantomJS
   #
@@ -67,6 +88,7 @@ RUN \
   fi && \
   #
   echo "grafana setup .." && \
+  cd ${GOPATH}/src/github.com/grafana/grafana && \
   go run build.go setup  2> /dev/null && \
   echo "grafana build .." && \
   go run build.go build  2> /dev/null && \
@@ -86,10 +108,14 @@ RUN \
   #
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
+  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
   cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
-  cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen         /usr/share/grafana/public && \
-  cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+  if [ -d public ] ; then \
+    cp -ar ${GOPATH}/src/github.com/grafana/grafana/public           /usr/share/grafana/ ; \
+  elif [ -d public_gen ] ; then \
+    cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen       /usr/share/grafana/public ; \
+  fi && \
   #
   # create needed directorys
   #
@@ -106,8 +132,8 @@ RUN \
   #
   # and clean up
   #
-  npm ls -gp --depth=0 | awk -F/node_modules/ '{print $2}' | grep -vE '^(npm|)$' | xargs -r npm -g rm && \
   go clean -i -r && \
+  npm ls -gp --depth=0 | awk -F/node_modules/ '{print $2}' | grep -vE '^(npm|)$' | xargs -r npm -g rm && \
   apk --quiet --purge del ${APK_BUILD_BASE} && \
   rm -rf \
     ${GOPATH} \
