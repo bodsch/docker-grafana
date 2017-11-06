@@ -118,6 +118,7 @@ start_grafana() {
   exec /usr/share/grafana/bin/grafana-server \
     -homepath /usr/share/grafana \
     -config=${GRAFANA_CONFIG_FILE} \
+    cfg:default.server.http_addr=127.0.0.1 \
     cfg:default.paths.logs=/var/log/grafana &
 
   if [ $? -eq 0 ]
