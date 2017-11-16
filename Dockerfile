@@ -16,7 +16,7 @@ ENV \
   PHANTOMJS_VERSION="2.11" \
   GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
   APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen s6 sqlite yajl-tools" \
-  APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm"
+  APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm python"
 
 EXPOSE 3000
 
