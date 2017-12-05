@@ -1,27 +1,22 @@
 
-FROM alpine:latest
+FROM alpine:3.7
 
 MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
 
 ENV \
-  ALPINE_MIRROR="mirror1.hs-esslingen.de/pub/Mirrors" \
-  ALPINE_VERSION="v3.6" \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-11-06" \
+  BUILD_DATE="2017-12-05" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.6.1" \
-  PHANTOMJS_VERSION="2.11" \
-  GRAFANA_PLUGINS="grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel" \
-  APK_ADD="bash ca-certificates curl jq mysql-client netcat-openbsd pwgen s6 sqlite yajl-tools" \
-  APK_BUILD_BASE="g++ git go make nodejs-current nodejs-current-npm python"
+  GRAFANA_VERSION="4.6.2" \
+  PHANTOMJS_VERSION="2.11"
 
 EXPOSE 3000
 
 LABEL \
-  version="1711" \
+  version="1712" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
@@ -36,35 +31,13 @@ LABEL \
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/main"       > /etc/apk/repositories && \
-  echo "http://${ALPINE_MIRROR}/alpine/${ALPINE_VERSION}/community" >> /etc/apk/repositories && \
-  apk \
-    --no-cache \
-    update && \
-  apk \
-    --no-cache \
-    upgrade && \
-  apk \
-    --no-cache \
-    add ${APK_ADD} && \
-  # to fix this problem with nodejs 8.x:
-  # 'Error relocating /usr/bin/node: uv_fs_copyfile: symbol not found'
-  apk \
-    --no-cache \
-    --update-cache \
-    --repository http://${ALPINE_MIRROR}/alpine/edge/main \
-    --allow-untrusted \
-    add libuv  && \
-  # install newer build tools (go 1.9.x & nodejs 8.6.x) from edge
-  apk \
-    --no-cache \
-    --update-cache \
-    --repository http://${ALPINE_MIRROR}/alpine/edge/community \
-    --allow-untrusted \
-    add ${APK_BUILD_BASE} && \
-  #
+  apk update --quiet --no-cache && \
+  apk upgrade --quiet --no-cache && \
+  apk add --quiet --virtual .build-deps \
+    g++ git go make python libuv nodejs nodejs-npm && \
+  apk add --no-cache \
+    bash ca-certificates curl jq mysql-client netcat-openbsd pwgen s6 sqlite yajl-tools && \
   # download and install phantomJS
-  #
   echo "get phantomjs ${PHANTOMJS_VERSION} from external ressources ..." && \
   curl \
     --silent \
@@ -74,28 +47,22 @@ RUN \
   | bunzip2 \
   | tar x -C / && \
   ln -s /phantomjs/phantomjs /usr/bin/ && \
-  #
   # build and install grafana
-  #
   echo "get grafana sources ..." && \
   go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  #
   # build stable packages
   if [ "${BUILD_TYPE}" == "stable" ] ; then \
     echo "switch to stable Tag v${GRAFANA_VERSION}" && \
     git checkout tags/v${GRAFANA_VERSION} 2> /dev/null ; \
   fi && \
-  #
   echo "grafana setup .." && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   go run build.go setup  2> /dev/null && \
   echo "grafana build .." && \
   go run build.go build  2> /dev/null && \
   unset GOMAXPROCS && \
-  #
   # build frontend
-  #
   echo "build frontend ..." && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   /usr/bin/npm config set loglevel silent && \
@@ -103,9 +70,7 @@ RUN \
   /usr/bin/npm install -g yarn  && \
   /usr/bin/yarn install --pure-lockfile --no-progress && \
   /usr/bin/npm run build && \
-  #
   # move all packages to the right place
-  #
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
@@ -116,25 +81,19 @@ RUN \
   elif [ -d public_gen ] ; then \
     cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen       /usr/share/grafana/public ; \
   fi && \
-  #
   # create needed directorys
-  #
   mkdir /var/log/grafana && \
   mkdir /var/log/supervisor && \
-  #
   # install my favorite grafana plugins
-  #
   echo "install grafana plugins ..." && \
-  for plugin in ${GRAFANA_PLUGINS} ; \
+  for plugin in grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel ; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
   done && \
-  #
   # and clean up
-  #
   go clean -i -r && \
   npm ls -gp --depth=0 | awk -F/node_modules/ '{print $2}' | grep -vE '^(npm|)$' | xargs -r npm -g rm && \
-  apk --quiet --purge del ${APK_BUILD_BASE} && \
+  apk del --quiet --purge .build-deps && \
   rm -rf \
     ${GOPATH} \
     /usr/lib/go \
@@ -152,5 +111,11 @@ COPY rootfs/ /
 VOLUME [ "/usr/share/grafana/data" "/usr/share/grafana/public/dashboards" "/opt/grafana/dashboards" ]
 
 WORKDIR /usr/share/grafana
+
+HEALTHCHECK \
+  --interval=5s \
+  --timeout=2s \
+  --retries=12 \
+  CMD curl --silent --fail localhost:3000 || exit 1
 
 CMD [ "/init/run.sh" ]

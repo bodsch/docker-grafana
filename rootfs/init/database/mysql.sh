@@ -1,10 +1,4 @@
 
-
-if [ "${DATABASE_TYPE}" == "sqlite3" ]
-then
-  return
-fi
-
 if [ -z ${MYSQL_HOST} ]
 then
   echo " [i] no MYSQL_HOST set ..."

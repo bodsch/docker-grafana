@@ -69,6 +69,8 @@ prepare() {
     DBA_USER=grafana
     DBA_PASS=${DATABASE_GRAFANA_PASS}
     DBA_NAME=grafana
+
+    dba_host="${DBA_HOST}:${MYSQL_PORT}"
   fi
 
   if [ -z "${MEMCACHE_HOST}" ]
@@ -91,7 +93,7 @@ prepare() {
 
   sed -i \
     -e 's|%DBA_TYPE%|'${DBA_TYPE}'|' \
-    -e 's|%DBA_HOST%|'${DBA_HOST}:${MYSQL_PORT}'|g' \
+    -e 's|%DBA_HOST%|'${dba_host}'|g' \
     -e 's|%DBA_NAME%|'${DBA_NAME}'|g' \
     -e 's|%DBA_USER%|'${DBA_USER}'|g' \
     -e 's|%DBA_PASS%|'${DBA_PASS}'|g' \
@@ -177,14 +179,15 @@ run() {
 
   prepare
 
-  . /init/database/mysql.sh
+  . /init/database.sh
+  . /init/organisation.sh
   . /init/plugins.sh
   . /init/authentications.sh
 
   start_grafana
 
+  update_organisation
   ldap_authentication
-
   update_plugins
 
   kill_grafana
