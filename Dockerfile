@@ -1,22 +1,21 @@
 
 FROM alpine:3.7
 
-MAINTAINER Bodo Schulz <bodo@boone-schulz.de>
-
 ENV \
   GOPATH=/opt/go \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-12-05" \
+  BUILD_DATE="2017-12-15" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.6.2" \
+  GRAFANA_VERSION="4.6.3" \
   PHANTOMJS_VERSION="2.11"
 
 EXPOSE 3000
 
 LABEL \
   version="1712" \
+  maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
   org.label-schema.description="Inofficial Grafana Docker Image" \
