@@ -6,15 +6,15 @@ ENV \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2017-12-15" \
-  BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.6.3" \
+  BUILD_DATE="2018-01-04" \
+  BUILD_TYPE="git" \
+  GRAFANA_VERSION="5.0.0-pre1" \
   PHANTOMJS_VERSION="2.11"
 
 EXPOSE 3000
 
 LABEL \
-  version="1712" \
+  version="1801" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \

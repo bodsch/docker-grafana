@@ -9,10 +9,16 @@ ldap_configuation() {
   local group_dn=${6}
   local search_filter=${7}
 
+  if ( [ -z ${server} ] || [ ${server} == null ] ); then
+    return
+  fi
+
   [ ${#port} -eq 0 ] && port=389
   [ ${#search_filter} -eq 0 ] && search_filter="(cn=%s)"
 
   file="/etc/grafana/ldap.toml"
+
+  echo " [i] create LDAP configuration"
 
   cat << EOF > ${file}
 
@@ -63,11 +69,20 @@ EOF
 
 ldap_authentication() {
 
-  ldap=$(echo "${LDAP}"  | jq '.')
-
-  if [ ! -z "${ldap}" ]
+  if [ ! -z "${LDAP}" ]
   then
-    echo " [i] create LDAP configuration"
+
+    echo "${LDAP}" | json_verify -q 2> /dev/null
+
+    if [ $? -gt 0 ]
+    then
+      echo " [W] the LDAP Environment is not an json."
+      echo " [W] use skip this configuration part."
+      return
+    fi
+
+
+    ldap=$(echo "${LDAP}"  | jq '.')
 
     echo "${ldap}" | jq --compact-output --raw-output '.' | while IFS='' read u
     do
