@@ -2,13 +2,13 @@
 version: '2.0'
 
 services:
-  grafana:
+  grafana-test:
     restart: always
     build: .
-    container_name: grafana
-    hostname: grafana
+    container_name: grafana-test
+    hostname: grafana-test
     ports:
-      - 3000:3000
+      - 3030:3000
     environment:
       URL_PATH: /
       # DATABASE_TYPE: mysql

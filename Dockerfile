@@ -6,9 +6,9 @@ ENV \
   GOROOT=/usr/lib/go \
   GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2018-01-04" \
-  BUILD_TYPE="git" \
-  GRAFANA_VERSION="5.0.0-pre1" \
+  BUILD_DATE="2018-01-15" \
+  BUILD_TYPE="stable" \
+  GRAFANA_VERSION="4.6.3" \
   PHANTOMJS_VERSION="2.11"
 
 EXPOSE 3000
