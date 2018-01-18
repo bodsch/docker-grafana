@@ -6,17 +6,19 @@ insert_plugins() {
 
   for p in ${plugins}
   do
-    /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins"  plugins install ${p}
+    /usr/share/grafana/bin/grafana-cli \
+      --pluginsDir "/usr/share/grafana/data/plugins" \
+      plugins \
+      install \
+      ${p}
   done
 }
 
 
 update_plugins() {
 
-  echo -n " [i] update plugins"
+  log_info "update plugins"
 
   /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins upgrade-all 1> /dev/null
-
-  echo "  done"
 }
 

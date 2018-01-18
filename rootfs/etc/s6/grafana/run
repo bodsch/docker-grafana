@@ -1,7 +1,0 @@
-#! /bin/sh
-
-PROGARGS="-homepath=/usr/share/grafana -pidfile=/tmp/grafana.pid -config=/etc/grafana/grafana.ini cfg:default.paths.data=/usr/share/grafana cfg:default.paths.logs=/var/log/grafana"
-PROGHOME="/usr/share/grafana"
-PROGNAME="/usr/share/grafana/bin/grafana-server"
-
-exec ${PROGNAME} ${PROGARGS}

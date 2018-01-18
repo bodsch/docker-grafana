@@ -1,12 +1,7 @@
 
-if [ -z ${MYSQL_HOST} ]
-then
-  echo " [i] no MYSQL_HOST set ..."
+[[ -z ${MYSQL_HOST} ]] && return
 
-  return
-else
-  MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
-fi
+MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_ROOT_PASS} --port=${MYSQL_PORT}"
 
 DATABASE_NAME="grafana"
 
@@ -17,21 +12,21 @@ waitForDatabase() {
 
   # wait for database
   #
-  until [ ${RETRY} -le 0 ]
+  until [[ ${RETRY} -le 0 ]]
   do
     nc ${MYSQL_HOST} ${MYSQL_PORT} < /dev/null > /dev/null
 
-    [ $? -eq 0 ] && break
+    [[ $? -eq 0 ]] && break
 
-    echo " [i] Waiting for database to come up"
+    log_info "Waiting for database to come up"
 
     sleep 5s
     RETRY=$(expr ${RETRY} - 1)
   done
 
-  if [ $RETRY -le 0 ]
+  if [[ $RETRY -le 0 ]]
   then
-    echo " [E] Could not connect to Database on ${MYSQL_HOST}:${MYSQL_PORT}"
+    log_error "Could not connect to Database on ${MYSQL_HOST}:${MYSQL_PORT}"
     exit 1
   fi
 
@@ -39,13 +34,13 @@ waitForDatabase() {
 
   # must start initdb and do other jobs well
   #
-  until [ ${RETRY} -le 0 ]
+  until [[ ${RETRY} -le 0 ]]
   do
     mysql ${MYSQL_OPTS} --execute="select 1 from mysql.user limit 1" > /dev/null
 
-    [ $? -eq 0 ] && break
+    [[ $? -eq 0 ]] && break
 
-    echo " [i] wait for the database for her initdb and all other jobs"
+    log_info "wait for the database for her initdb and all other jobs"
     sleep 5s
     RETRY=$(expr ${RETRY} - 1)
   done
@@ -63,13 +58,13 @@ createDatabase() {
 
   db_status=$(mysql ${MYSQL_OPTS} --batch --execute="${query}")
 
-  if [ $(echo "${db_status}" | wc -w) -eq 0 ]
+  if [[ $(echo "${db_status}" | wc -w) -eq 0 ]]
   then
     # Database isn't created
     # well, i do my job ...
     #
 
-    echo " [i] Initializing database."
+    log_info "Initializing database."
     (
       echo "--- create user 'grafana'@'%' IDENTIFIED BY '${DBA_PASS}';"
       echo "CREATE DATABASE IF NOT EXISTS ${DATABASE_NAME};"
@@ -77,9 +72,9 @@ createDatabase() {
       echo "FLUSH PRIVILEGES;"
     ) | mysql ${MYSQL_OPTS}
 
-    if [ $? -eq 1 ]
+    if [[ $? -eq 1 ]]
     then
-      echo " [E] can't create Database '${DATABASE_NAME}'"
+      log_error "can't create Database '${DATABASE_NAME}'"
       exit 1
     fi
 

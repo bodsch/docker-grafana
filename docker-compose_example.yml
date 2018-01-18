@@ -1,5 +1,5 @@
 ---
-version: '2.0'
+version: '3.0'
 
 services:
   grafana-test:
@@ -21,6 +21,21 @@ services:
       # MEMCACHE_HOST: memcached
       # MEMCACHE_PORT: 11211
       # DATABASE_GRAFANA_PASS: grafana
+      # LDAP_SERVER: ${LDAP_SERVER}
+      # LDAP_PORT: ${LDAP_PORT}
+      # LDAP_BIND_DN: ${LDAP_BIND_DN}
+      # LDAP_BIND_PASSWORD: ${LDAP_BIND_PASSWORD}
+      # LDAP_BASE_DN: ${LDAP_BASE_DN}
+      # LDAP_GROUP_DN: ${LDAP_GROUP_DN}
+      # LDAP_SEARCH_FILTER: ${LDAP_SEARCH_FILTER}
+      LDAP: '{
+        "server": "${LDAP_SERVER}",
+        "port": "${LDAP_PORT}",
+        "bind_dn": "${LDAP_BIND_DN}",
+        "bind_password": "${LDAP_BIND_PASSWORD}",
+        "base_dn": "${LDAP_BASE_DN}",
+        "group_dn": "${LDAP_GROUP_DN}",
+        "search_filter": "${LDAP_SEARCH_FILTER}"
+      }'
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - /tmp/docker-data/grafana:/srv

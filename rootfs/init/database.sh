@@ -1,8 +1,5 @@
 
 
-if [ "${DATABASE_TYPE}" == "sqlite3" ]
-then
-  return
-fi
+[[ "${DATABASE_TYPE}" == "sqlite3" ]] && return
 
 . /init/database/mysql.sh
