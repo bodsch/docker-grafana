@@ -1,7 +1,7 @@
 
 update_organisation() {
 
-  echo " [i] updating organistation to '${ORGANISATION}'"
+  log_info "updating organistation to '${ORGANISATION}'"
 
   curl_opts="--silent --user admin:admin"
 
@@ -9,7 +9,7 @@ update_organisation() {
 
   name=$(echo ${data} | jq --raw-output '.name')
 
-  if [ "${name}" != "${ORGANISATION}"  ]
+  if [[ "${name}" != "${ORGANISATION}" ]]
   then
     data=$(curl \
       ${curl_opts} \

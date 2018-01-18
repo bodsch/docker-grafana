@@ -2,10 +2,7 @@
 #
 #
 
-if [ ${DEBUG} ]
-then
-  set -x
-fi
+[[ ${DEBUG} ]] && set -x
 
 export WORK_DIR=/srv/grafana
 
@@ -38,31 +35,31 @@ DBA_USER=
 DBA_PASS=
 DBA_NAME=
 
-# -------------------------------------------------------------------------------------------------
+. /init/output.sh
 
+# -------------------------------------------------------------------------------------------------
 
 prepare() {
 
-  echo " ---------------------------------------------------"
-  echo "   Grafana ${GRAFANA_VERSION} (${BUILD_TYPE}) build: ${BUILD_DATE}"
-  echo " ---------------------------------------------------"
-  echo ""
+  log_info "---------------------------------------------------"
+  log_info "  Grafana ${GRAFANA_VERSION} (${BUILD_TYPE}) build: ${BUILD_DATE}"
+  log_info "---------------------------------------------------"
 
-  [ -d ${WORK_DIR} ] || mkdir -p ${WORK_DIR}
+  [[ -d ${WORK_DIR} ]] || mkdir -p ${WORK_DIR}
 
-  if [ "${DATABASE_TYPE}" == "sqlite3" ]
+  if [[ "${DATABASE_TYPE}" == "sqlite3" ]]
   then
     DBA_TYPE=sqlite3
     MYSQL_PORT=
 
     i=$((${#SQLITE_PATH}-1))
 
-    if ( [ ${i} -gt 1 ] && [ "${SQLITE_PATH:$i:1}" != "/" ] )
+    if ( [[ ${i} -gt 1 ]] && [[ "${SQLITE_PATH:$i:1}" != "/" ]] )
     then
       SQLITE_PATH="${SQLITE_PATH}/"
     fi
 
-  elif [ "${DATABASE_TYPE}" == "mysql" ]
+  elif [[ "${DATABASE_TYPE}" == "mysql" ]]
   then
     DBA_TYPE=mysql
     DBA_HOST="${MYSQL_HOST}"
@@ -73,20 +70,24 @@ prepare() {
     dba_host="${DBA_HOST}:${MYSQL_PORT}"
   fi
 
-  if [ -z "${MEMCACHE_HOST}" ]
+  # default session handling
+  #
+  SESSION_PROVIDER="file"
+  SESSION_CONFIG="sessions"
+
+  if [[ ! -z "${MEMCACHE_HOST}" ]]
   then
-    SESSION_PROVIDER="file"
-    SESSION_CONFIG="sessions"
-  else
     SESSION_PROVIDER="memcache"
     SESSION_CONFIG="${MEMCACHE_HOST}:${MEMCACHE_PORT}"
   fi
 
-  if [ -z ${CARBON_HOST} ]
+  # default metrics handling
+  #
+  carbon_host=
+  ENABLE_METRICS="false"
+
+  if [[ ! -z ${CARBON_HOST} ]]
   then
-    carbon_host=
-    ENABLE_METRICS="false"
-  else
     carbon_host="${CARBON_HOST}:${CARBON_PORT}"
     ENABLE_METRICS="true"
   fi
@@ -110,12 +111,9 @@ prepare() {
 
 start_grafana() {
 
-  if [ "${DATABASE_TYPE}" == "mysql" ]
-  then
-    waitForDatabase
-  fi
+  [[ "${DATABASE_TYPE}" == "mysql" ]] && waitForDatabase
 
-  echo " [i] start grafana-server for the first time to create database schemas and update plugins"
+  log_info "start grafana-server for the first time to create database schemas and update plugins"
 
   exec /usr/share/grafana/bin/grafana-server \
     -homepath /usr/share/grafana \
@@ -123,15 +121,11 @@ start_grafana() {
     cfg:default.server.http_addr=127.0.0.1 \
     cfg:default.paths.logs=/var/log/grafana &
 
-  if [ $? -eq 0 ]
+  if [[ $? -gt 0 ]]
   then
-    echo " [i] successful ..."
-  else
-    echo " [E] result code: $?"
+    log_error "result code: $?"
     exit 1
   fi
-
-  echo " [i]    wait for initalize grafana .. "
 
   sleep 2s
 
@@ -139,21 +133,21 @@ start_grafana() {
 
   # wait for grafana
   #
-  until [ ${RETRY} -le 0 ]
+  until [[ ${RETRY} -le 0 ]]
   do
     grafana_up=$(netstat -tlnp | grep ":3000" | wc -l)
 
-    [ ${grafana_up} -eq 1 ] && break
+    [[ ${grafana_up} -eq 1 ]] && break
 
-    echo " [i] waiting for grafana to come up"
+    log_info "waiting for grafana to come up"
 
-    sleep 2s
+    sleep 4s
     RETRY=$(expr ${RETRY} - 1)
   done
 
-  if [ $RETRY -le 0 ]
+  if [[ ${RETRY} -le 0 ]]
   then
-    echo " [E] grafana is not successful started :("
+    log_error "grafana is not successful started :("
     exit 1
   fi
 
@@ -165,7 +159,7 @@ kill_grafana() {
 
   grafana_pid=$(ps ax | grep grafana | grep -v grep | awk '{print $1}')
 
-  if [ ! -z "${grafana_pid}" ]
+  if [[ ! -z "${grafana_pid}" ]]
   then
     kill -15 ${grafana_pid} > /dev/null 2> /dev/null
 
@@ -175,7 +169,7 @@ kill_grafana() {
 
 update_organisation() {
 
-  echo " [i] updating organistation to '${ORGANISATION}'"
+  log_info "updating organistation to '${ORGANISATION}'"
 
   curl_opts="--silent --user admin:admin"
 
@@ -183,7 +177,7 @@ update_organisation() {
 
   name=$(echo ${data} | jq --raw-output '.name')
 
-  if [ "${name}" != "${ORGANISATION}"  ]
+  if [[ "${name}" != "${ORGANISATION}" ]]
   then
     data=$(curl \
       ${curl_opts} \
@@ -210,13 +204,17 @@ run() {
   update_organisation
   ldap_authentication
   update_plugins
-  update_organisation
 
   kill_grafana
 
-  echo " [i] start init process ..."
+  log_info "start init process ..."
 
-  /bin/s6-svscan /etc/s6
+  /usr/share/grafana/bin/grafana-server \
+    -homepath=/usr/share/grafana \
+    -pidfile=/tmp/grafana.pid \
+    -config=/etc/grafana/grafana.ini \
+    cfg:default.paths.data=/usr/share/grafana \
+    cfg:default.paths.logs=/var/log/grafana
 }
 
 run

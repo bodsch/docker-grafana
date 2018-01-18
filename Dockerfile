@@ -2,13 +2,10 @@
 FROM alpine:3.7
 
 ENV \
-  GOPATH=/opt/go \
-  GOROOT=/usr/lib/go \
-  GOMAXPROCS=4 \
   TERM=xterm \
-  BUILD_DATE="2018-01-04" \
-  BUILD_TYPE="git" \
-  GRAFANA_VERSION="5.0.0-pre1" \
+  BUILD_DATE="2018-01-18" \
+  BUILD_TYPE="stable" \
+  GRAFANA_VERSION="4.6.3" \
   PHANTOMJS_VERSION="2.11"
 
 EXPOSE 3000
@@ -35,7 +32,7 @@ RUN \
   apk add --quiet --virtual .build-deps \
     g++ git go make python libuv nodejs nodejs-npm && \
   apk add --no-cache \
-    bash ca-certificates curl jq mysql-client netcat-openbsd pwgen s6 sqlite yajl-tools && \
+    bash ca-certificates curl jq mysql-client netcat-openbsd pwgen sqlite yajl-tools && \
   # download and install phantomJS
   echo "get phantomjs ${PHANTOMJS_VERSION} from external ressources ..." && \
   curl \
@@ -46,6 +43,9 @@ RUN \
   | bunzip2 \
   | tar x -C / && \
   ln -s /phantomjs/phantomjs /usr/bin/ && \
+  export GOPATH=/opt/go && \
+  export GOROOT=/usr/lib/go && \
+  export GOMAXPROCS=4 && \
   # build and install grafana
   echo "get grafana sources ..." && \
   go get github.com/grafana/grafana || true && \
