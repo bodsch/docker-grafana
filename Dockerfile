@@ -3,7 +3,7 @@ FROM alpine:3.7
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2018-01-18" \
+  BUILD_DATE="2018-02-01" \
   BUILD_TYPE="stable" \
   GRAFANA_VERSION="4.6.3" \
   PHANTOMJS_VERSION="2.11"
@@ -11,7 +11,7 @@ ENV \
 EXPOSE 3000
 
 LABEL \
-  version="1801" \
+  version="1802" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
@@ -31,7 +31,7 @@ RUN \
   apk upgrade --quiet --no-cache && \
   apk add --quiet --virtual .build-deps \
     g++ git go make python libuv nodejs nodejs-npm && \
-  apk add --no-cache \
+  apk add --quiet --no-cache \
     bash ca-certificates curl jq mysql-client netcat-openbsd pwgen sqlite yajl-tools && \
   # download and install phantomJS
   echo "get phantomjs ${PHANTOMJS_VERSION} from external ressources ..." && \
@@ -63,12 +63,14 @@ RUN \
   unset GOMAXPROCS && \
   # build frontend
   echo "build frontend ..." && \
+  export JOBS=4 && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   /usr/bin/npm config set loglevel silent && \
   /usr/bin/npm install          && \
   /usr/bin/npm install -g yarn  && \
   /usr/bin/yarn install --pure-lockfile --no-progress && \
   /usr/bin/npm run build && \
+  unset JOBS && \
   # move all packages to the right place
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
@@ -82,7 +84,6 @@ RUN \
   fi && \
   # create needed directorys
   mkdir /var/log/grafana && \
-  mkdir /var/log/supervisor && \
   # install my favorite grafana plugins
   echo "install grafana plugins ..." && \
   for plugin in grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel ; \

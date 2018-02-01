@@ -121,7 +121,6 @@ ldap_authentication() {
       [[ "${search_filter}" == null ]] && LDAP_SEARCH_FILTER=
     fi
   else
-
     LDAP_SERVER=${LDAP_SERVER:-}
     LDAP_PORT=${LDAP_PORT:-389}
     LDAP_BIND_DN=${LDAP_BIND_DN:-''}
