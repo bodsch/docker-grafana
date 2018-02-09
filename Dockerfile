@@ -4,8 +4,8 @@ FROM alpine:3.7
 ENV \
   TERM=xterm \
   BUILD_DATE="2018-02-01" \
-  BUILD_TYPE="stable" \
-  GRAFANA_VERSION="4.6.3" \
+  BUILD_TYPE="git" \
+  GRAFANA_VERSION="5.0.0-beta1" \
   PHANTOMJS_VERSION="2.11"
 
 EXPOSE 3000
@@ -86,7 +86,7 @@ RUN \
   mkdir /var/log/grafana && \
   # install my favorite grafana plugins
   echo "install grafana plugins ..." && \
-  for plugin in grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel ; \
+  for plugin in grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel vonage-status-panel michaeldmoore-annunciator-panel neocat-cal-heatmap-panel; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
   done && \
