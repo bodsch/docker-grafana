@@ -4,6 +4,8 @@
 
 [[ ${DEBUG} ]] && set -x
 
+[[ -f /etc/enviroment ]] && . /etc/enviroment
+
 export WORK_DIR=/srv/grafana
 
 ORGANISATION=${ORGANISATION:-"Docker"}
