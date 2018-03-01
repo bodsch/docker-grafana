@@ -6,7 +6,7 @@ services:
   - docker
 
 install:
-  - travis_retry docker build --tag bodsch/docker-grafana .
+  - travis_wait 20 docker build --tag bodsch/docker-grafana .
   - docker run --detach --name grafana bodsch/docker-grafana
 
 script:
