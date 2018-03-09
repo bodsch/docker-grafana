@@ -3,9 +3,9 @@ FROM golang:1.10.0-alpine3.7 as builder
 
 ENV \
   TERM=xterm \
-  BUILD_DATE="2018-03-01" \
+  BUILD_DATE="2018-03-08" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="5.0.0" \
+  GRAFANA_VERSION="5.0.1" \
   PHANTOMJS_VERSION="2.11" \
   TZ='Europe/Berlin'
 
