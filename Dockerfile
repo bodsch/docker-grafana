@@ -5,7 +5,7 @@ ENV \
   TERM=xterm \
   BUILD_DATE="2018-03-08" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="5.0.1" \
+  GRAFANA_VERSION="5.0.2" \
   PHANTOMJS_VERSION="2.11" \
   TZ='Europe/Berlin'
 
