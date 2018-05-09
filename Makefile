@@ -8,12 +8,26 @@ REPO     = docker-grafana
 NAME     = grafana
 INSTANCE = default
 
+BUILD_DATE := $(shell date +%Y-%m-%d)
+BUILD_VERSION := $(shell date +%y%m)
+
 .PHONY: build push shell run start stop rm release
 
+default: build
 
-build:
+params:
+	@echo ""
+	@echo " GRAFANA_VERSION: ${GRAFANA_VERSION}"
+	@echo " BUILD_DATE     : $(BUILD_DATE)"
+	@echo ""
+
+build:	params
 	docker build \
-		--rm \
+		--force-rm \
+		--compress \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
 		--tag $(NS)/$(REPO):$(VERSION) .
 
 clean:
@@ -25,7 +39,7 @@ history:
 	docker history \
 		$(NS)/$(REPO):$(VERSION)
 
-push:
+push:	params
 	docker push \
 		$(NS)/$(REPO):$(VERSION)
 
@@ -76,7 +90,3 @@ rm:
 
 release: build
 	make push -e VERSION=$(VERSION)
-
-default: build
-
-

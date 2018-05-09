@@ -5,17 +5,36 @@ group: edge
 services:
   - docker
 
-install:
-  - travis_wait 20 docker build --tag bodsch/docker-grafana .
-  - docker run --detach --name grafana bodsch/docker-grafana
+env:
+  global:
+    - GRAFANA_VERSION=${GRAFANA_VERSION:-5.1.1}
+    - BUILD_DATE=$(date +"%Y-%m-%d")
 
-script:
-  - docker ps | grep -q grafana
+jobs:
+  include:
+    - stage: build, test and push docker image
+      script:
+        - make build
+        - docker-compose --file docker-compose_example.yml up --build -d
+        - tests/test.sh
+        - docker-compose --file docker-compose_example.yml kill
+        - docker-compose --file docker-compose_example.yml down
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker push ${DOCKER_USERNAME}/docker-icinga2:${GRAFANA_VERSION
 
-after_success:
-  - |
-    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
-      --request POST \
-      --header "Content-Type: application/json"  \
-      --data '{"source_type":"Branch","source_name":"master"}' \
-      https://registry.hub.docker.com/u/bodsch/docker-grafana/trigger/${DOCKER_HUB_TOKEN}/
+
+#install:
+#  - travis_wait 20 docker build --tag bodsch/docker-grafana .
+#  - docker run --detach --name grafana bodsch/docker-grafana
+#
+#script:
+#  - docker ps | grep -q grafana
+#
+#after_success:
+#  - |
+#    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
+#      --request POST \
+#      --header "Content-Type: application/json"  \
+#      --data '{"source_type":"Branch","source_name":"master"}' \
+#      https://registry.hub.docker.com/u/bodsch/docker-grafana/trigger/${DOCKER_HUB_TOKEN}/
+#

@@ -1,11 +1,12 @@
 
 FROM golang:1.10-alpine as builder
 
+ARG BUILD_DATE
+ARG GRAFANA_VERSION
+
 ENV \
   TERM=xterm \
-  BUILD_DATE="2018-05-08" \
   BUILD_TYPE="stable" \
-  GRAFANA_VERSION="5.1.1" \
   PHANTOMJS_VERSION="2.11" \
   TZ='Europe/Berlin'
 
@@ -92,7 +93,7 @@ FROM alpine:3.7
 EXPOSE 3000
 
 LABEL \
-  version="1805" \
+  version="$BUILD_VERSION" \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
