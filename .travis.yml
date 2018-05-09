@@ -21,20 +21,5 @@ jobs:
         - docker-compose --file docker-compose_example.yml down
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
-
-
-#install:
-#  - travis_wait 20 docker build --tag bodsch/docker-grafana .
-#  - docker run --detach --name grafana bodsch/docker-grafana
-#
-#script:
-#  - docker ps | grep -q grafana
-#
-#after_success:
-#  - |
-#    [ "${TRAVIS_BRANCH}" == "master" ] && curl \
-#      --request POST \
-#      --header "Content-Type: application/json"  \
-#      --data '{"source_type":"Branch","source_name":"master"}' \
-#      https://registry.hub.docker.com/u/bodsch/docker-grafana/trigger/${DOCKER_HUB_TOKEN}/
-#
+        - docker tag ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION} ${DOCKER_USERNAME}/docker-grafana:latest
+        - docker push ${DOCKER_USERNAME}/docker-grafana:latest
