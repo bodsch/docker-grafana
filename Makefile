@@ -2,7 +2,6 @@
 include env_make
 
 NS       = bodsch
-VERSION ?= latest
 
 REPO     = docker-grafana
 NAME     = grafana
@@ -28,20 +27,20 @@ build:	params
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
-		--tag $(NS)/$(REPO):$(VERSION) .
+		--tag $(NS)/$(REPO):${GRAFANA_VERSION} .
 
 clean:
 	docker rmi \
 		--force \
-		$(NS)/$(REPO):$(VERSION)
+		$(NS)/$(REPO):${GRAFANA_VERSION}
 
 history:
 	docker history \
-		$(NS)/$(REPO):$(VERSION)
+		$(NS)/$(REPO):${GRAFANA_VERSION}
 
 push:	params
 	docker push \
-		$(NS)/$(REPO):$(VERSION)
+		$(NS)/$(REPO):${GRAFANA_VERSION}
 
 shell:
 	docker run \
@@ -52,7 +51,7 @@ shell:
 		$(PORTS) \
 		$(VOLUMES) \
 		$(ENV) \
-		$(NS)/$(REPO):$(VERSION) \
+		$(NS)/$(REPO):${GRAFANA_VERSION} \
 		/bin/sh
 
 run:
@@ -62,7 +61,7 @@ run:
 		$(PORTS) \
 		$(VOLUMES) \
 		$(ENV) \
-		$(NS)/$(REPO):$(VERSION)
+		$(NS)/$(REPO):${GRAFANA_VERSION}
 
 exec:
 	docker exec \
@@ -78,7 +77,7 @@ start:
 		$(PORTS) \
 		$(VOLUMES) \
 		$(ENV) \
-		$(NS)/$(REPO):$(VERSION)
+		$(NS)/$(REPO):${GRAFANA_VERSION}
 
 stop:
 	docker stop \
@@ -89,4 +88,4 @@ rm:
 		$(NAME)-$(INSTANCE)
 
 release: build
-	make push -e VERSION=$(VERSION)
+	make push -e VERSION=${GRAFANA_VERSION}
