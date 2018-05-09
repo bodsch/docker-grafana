@@ -2,6 +2,7 @@
 FROM golang:1.10-alpine as builder
 
 ARG BUILD_DATE
+ARG BUILD_VERSION
 ARG GRAFANA_VERSION
 
 ENV \
@@ -93,7 +94,7 @@ FROM alpine:3.7
 EXPOSE 3000
 
 LABEL \
-  version="$BUILD_VERSION" \
+  version=${BUILD_VERSION} \
   maintainer="Bodo Schulz <bodo@boone-schulz.de>" \
   org.label-schema.build-date=${BUILD_DATE} \
   org.label-schema.name="Grafana Docker Image" \
