@@ -34,7 +34,7 @@ start_tls = false
 ssl_skip_verify = false
 
 bind_dn = "${LDAP_BIND_DN}"
-bind_password = "${LDAP_BIND_PASSWORD}"
+bind_password = '${LDAP_BIND_PASSWORD}'
 
 search_filter = "${LDAP_SEARCH_FILTER}"
 
