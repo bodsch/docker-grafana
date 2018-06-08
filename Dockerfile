@@ -63,18 +63,23 @@ RUN \
   /usr/bin/npm install          && \
   /usr/bin/npm install -g yarn  && \
   /usr/bin/yarn install --pure-lockfile --no-progress && \
-  /usr/bin/npm run build && \
-  unset JOBS && \
+  /usr/bin/npm run build
+
+RUN \
+  export GOPATH=/opt/go && \
   # move all packages to the right place
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
-  cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-cli    /usr/share/grafana/bin/ && \
-  cp -a  ${GOPATH}/src/github.com/grafana/grafana/bin/grafana-server /usr/share/grafana/bin/ && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec cp -a {} /usr/share/grafana/bin/ \; && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec cp -a {} /usr/share/grafana/bin/ \; && \
   if [ -d public ] ; then \
     cp -ar ${GOPATH}/src/github.com/grafana/grafana/public           /usr/share/grafana/ ; \
   elif [ -d public_gen ] ; then \
     cp -ar ${GOPATH}/src/github.com/grafana/grafana/public_gen       /usr/share/grafana/public ; \
+  else \
+    echo "missing 'public' directory" \
+    exit 1 ; \
   fi
 
 RUN \
