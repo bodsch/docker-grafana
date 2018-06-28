@@ -7,14 +7,14 @@ services:
 
 env:
   global:
-    - GRAFANA_VERSION=${GRAFANA_VERSION:-5.1.2}
+    - GRAFANA_VERSION=${GRAFANA_VERSION:-5.1.5}
     - BUILD_DATE=$(date +"%Y-%m-%d")
 
 jobs:
   include:
     - stage: build, test and push docker image
       script:
-        - make build
+        - travis_wait 30 make build
         - docker-compose --file docker-compose_example.yml up --build -d
         - tests/test.sh
         - docker-compose --file docker-compose_example.yml kill
