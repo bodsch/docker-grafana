@@ -60,6 +60,7 @@ RUN \
   echo "build frontend ..." && \
   export JOBS=4 && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
+  /usr/bin/npm i npm@latest -g  && \
   /usr/bin/npm install          && \
   /usr/bin/npm install -g yarn  && \
   /usr/bin/yarn install --pure-lockfile --no-progress && \
