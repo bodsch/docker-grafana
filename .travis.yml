@@ -15,18 +15,19 @@ jobs:
   include:
     - stage: build
       script:
-        - travis_wait 30 make build
+        - make build
 
     - stage: test
       script:
-        - travis_wait 30 docker-compose --file docker-compose_example.yml up --build -d
+        - docker-compose --file docker-compose_example.yml build
+        - docker-compose --file docker-compose_example.yml up -d
         - tests/test.sh
         - docker-compose --file docker-compose_example.yml kill
         - docker-compose --file docker-compose_example.yml down
 
     - stage: build and push docker image
       script:
-        - travis_wait 30 make build
+        - make build
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
         - docker tag ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION} ${DOCKER_USERNAME}/docker-grafana:latest
