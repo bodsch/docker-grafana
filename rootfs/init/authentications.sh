@@ -88,11 +88,11 @@ ldap_authentication() {
 
     if [[ $? -gt 0 ]]
     then
-      log_info "the LDAP Environment is not an json"
+      #log_info "the LDAP Environment is not an json"
       USE_JSON="false"
     fi
   else
-    log_info "the LDAP Environment is not an json"
+    #log_info "the LDAP Environment is not an json"
     USE_JSON="false"
   fi
 

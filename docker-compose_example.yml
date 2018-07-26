@@ -4,7 +4,7 @@ version: '3.0'
 services:
   grafana-test:
     restart: always
-    image: bodsch/docker-grafana:5.1.2
+    image: bodsch/docker-grafana:5.2.2
     container_name: grafana-test
     hostname: grafana-test
     ports:

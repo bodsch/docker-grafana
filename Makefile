@@ -11,6 +11,8 @@ BUILD_DATE    := $(shell date +%Y-%m-%d)
 BUILD_VERSION := $(shell date +%y%m)
 GRAFANA_VERSION ?= 5.2.2
 
+GRAFANA_VERSION ?= 5.2.2
+
 .PHONY: build push shell run start stop rm release
 
 default: build
@@ -87,6 +89,11 @@ stop:
 rm:
 	docker rm \
 		$(NAME)-$(INSTANCE)
+
+compose:
+	docker-compose \
+		--file docker-compose_example.yml \
+		up
 
 release: build
 	make push -e VERSION=${GRAFANA_VERSION}
