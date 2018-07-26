@@ -95,7 +95,7 @@ CMD [ "/bin/bash" ]
 
 # ---------------------------------------------------------------------------------------
 
-FROM alpine:3.7
+FROM alpine:3.8
 
 EXPOSE 3000
 
@@ -117,7 +117,7 @@ RUN \
   apk --quiet --no-cache update && \
   if [ -f /etc/enviroment ] ; then . /etc/enviroment; fi && \
   apk add --quiet --no-cache \
-    bash ca-certificates curl jq mysql-client netcat-openbsd pwgen sqlite yajl-tools && \
+    bash ca-certificates curl jq mariadb-client netcat-openbsd pwgen sqlite yajl-tools && \
   # create needed directorys
   mkdir /var/log/grafana && \
   rm -rf \

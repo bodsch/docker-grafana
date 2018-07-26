@@ -4,7 +4,14 @@ version: '3.0'
 services:
   grafana-test:
     restart: always
-    image: bodsch/docker-grafana:5.2.2
+    build:
+      context: icinga2-master
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - BUILD_VERSION=${BUILD_VERSION}
+        - GRAFANA_VERSION=${GRAFANA_VERSION}
+    # image: bodsch/docker-grafana:5.2.2
     container_name: grafana-test
     hostname: grafana-test
     ports:

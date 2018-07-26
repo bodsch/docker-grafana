@@ -9,16 +9,24 @@ env:
   global:
     - GRAFANA_VERSION=${GRAFANA_VERSION:-5.2.2}
     - BUILD_DATE=$(date +"%Y-%m-%d")
+    - BUILD_VERSION=$(date +%y%m)
 
 jobs:
   include:
-    - stage: build, test and push docker image
+    - stage: build
       script:
         - travis_wait 30 make build
-        - docker-compose --file docker-compose_example.yml up --build -d
+
+    - stage: test
+      script:
+        - travis_wait 30 docker-compose --file docker-compose_example.yml up --build -d
         - tests/test.sh
         - docker-compose --file docker-compose_example.yml kill
         - docker-compose --file docker-compose_example.yml down
+
+    - stage: build and push docker image
+      script:
+        - travis_wait 30 make build
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
         - docker tag ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION} ${DOCKER_USERNAME}/docker-grafana:latest

@@ -69,7 +69,7 @@ inspect() {
 }
 
 echo "wait 1 minute1 for start"
-# sleep 1m
+sleep 1m
 
 inspect
 

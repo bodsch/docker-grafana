@@ -11,8 +11,6 @@ BUILD_DATE    := $(shell date +%Y-%m-%d)
 BUILD_VERSION := $(shell date +%y%m)
 GRAFANA_VERSION ?= 5.2.2
 
-GRAFANA_VERSION ?= 5.2.2
-
 .PHONY: build push shell run start stop rm release
 
 default: build
