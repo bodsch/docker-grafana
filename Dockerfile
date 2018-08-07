@@ -1,5 +1,5 @@
 
-FROM golang:1.10-alpine as builder
+FROM golang:1-alpine as builder
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
