@@ -5,7 +5,7 @@ services:
   grafana-test:
     restart: always
     build:
-      context: icinga2-master
+      context: .
       dockerfile: Dockerfile
       args:
         - BUILD_DATE=${BUILD_DATE}
