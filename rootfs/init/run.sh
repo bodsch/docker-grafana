@@ -4,7 +4,7 @@
 
 [[ ${DEBUG} ]] && set -x
 
-[[ -f /etc/enviroment ]] && . /etc/enviroment
+. /etc/profile
 
 export WORK_DIR=/srv/grafana
 

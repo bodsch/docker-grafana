@@ -14,16 +14,16 @@ ENV \
 # ---------------------------------------------------------------------------------------
 
 RUN \
-  apk update --no-cache && \
-  apk upgrade --no-cache && \
-  apk add \
+  apk update  --quiet --no-cache && \
+  apk upgrade --quiet --no-cache && \
+  apk add     --quiet \
     ca-certificates curl g++ git make python libuv nodejs nodejs-npm tzdata && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
-  echo "export TZ=${TZ}" > /etc/enviroment && \
-  echo "export BUILD_DATE=${BUILD_DATE}" >> /etc/enviroment && \
-  echo "export BUILD_TYPE=${BUILD_TYPE}" >> /etc/enviroment && \
-  echo "export GRAFANA_VERSION=${GRAFANA_VERSION}" >> /etc/enviroment
+  echo "export TZ=${TZ}"                            > /etc/profile.d/grafana.sh && \
+  echo "export BUILD_DATE=${BUILD_DATE}"           >> /etc/profile.d/grafana.sh && \
+  echo "export BUILD_TYPE=${BUILD_TYPE}"           >> /etc/profile.d/grafana.sh && \
+  echo "export GRAFANA_VERSION=${GRAFANA_VERSION}" >> /etc/profile.d/grafana.sh
 
 RUN \
   # download and install phantomJS
@@ -39,7 +39,6 @@ RUN \
 
 RUN \
   export GOPATH=/opt/go && \
-  # export GOROOT=/usr/lib/go && \
   export GOMAXPROCS=4 && \
   # build and install grafana
   echo "get grafana sources ..." && \
@@ -54,15 +53,17 @@ RUN \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   go run build.go setup  2> /dev/null && \
   echo "grafana build .." && \
-  go run build.go build  2> /dev/null && \
-  unset GOMAXPROCS && \
+  go run build.go build  2> /dev/null
+
+RUN \
   # build frontend
   echo "build frontend ..." && \
+  export GOPATH=/opt/go && \
   export JOBS=4 && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  /usr/bin/npm i npm@latest -g  && \
-  /usr/bin/npm install          && \
-  /usr/bin/npm install -g yarn  && \
+  /usr/bin/npm add -g npm@latest --no-progress && \
+  /usr/bin/npm install           --no-progress && \
+  /usr/bin/npm install -g yarn   --no-progress && \
   /usr/bin/yarn install --pure-lockfile --no-progress && \
   /usr/bin/npm run build
 
@@ -86,7 +87,21 @@ RUN \
 RUN \
   # install my favorite grafana plugins
   echo "install grafana plugins ..." && \
-  for plugin in grafana-clock-panel grafana-piechart-panel jdbranham-diagram-panel mtanda-histogram-panel btplc-trend-box-panel vonage-status-panel michaeldmoore-annunciator-panel neocat-cal-heatmap-panel; \
+  for plugin in \
+    blackmirror1-statusbygroup-panel \
+    btplc-trend-box-panel \
+    digiapulssi-breadcrumb-panel \
+    grafana-clock-panel \
+    grafana-piechart-panel \
+    jdbranham-diagram-panel \
+    michaeldmoore-annunciator-panel \
+    mtanda-histogram-panel \
+    natel-discrete-panel \
+    neocat-cal-heatmap-panel \
+    vonage-status-panel \
+    petrslavotinek-carpetplot-panel \
+    snuids-radar-panel \
+    zuburqan-parity-report-panel ; \
   do \
      /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
   done
@@ -115,7 +130,7 @@ LABEL \
 
 RUN \
   apk --quiet --no-cache update && \
-  if [ -f /etc/enviroment ] ; then . /etc/enviroment; fi && \
+  if [ -f /etc/profile.d/grafana.sh ] ; then . /etc/profile.d/grafana.sh; fi && \
   apk add --quiet --no-cache \
     bash ca-certificates curl jq mariadb-client netcat-openbsd pwgen sqlite yajl-tools && \
   # create needed directorys
@@ -124,7 +139,7 @@ RUN \
     /tmp/* \
     /var/cache/apk/*
 
-COPY --from=builder /etc/enviroment /etc/enviroment
+COPY --from=builder /etc/profile.d/grafana.sh /etc/profile.d/grafana.sh
 COPY --from=builder /usr/share/grafana /usr/share/grafana
 COPY --from=builder /usr/bin/phantomjs /usr/bin/phantomjs
 
