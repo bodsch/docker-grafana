@@ -10,6 +10,7 @@ env:
     - GRAFANA_VERSION=${GRAFANA_VERSION:-5.2.3}
     - BUILD_DATE=$(date +"%Y-%m-%d")
     - BUILD_VERSION=$(date +%y%m)
+    - BUILD_TYPE=${BUILD_TYPE:-stable}
 
 jobs:
   include:
@@ -30,6 +31,6 @@ jobs:
       script:
         - travis_wait 20 make build
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-        - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
+#        - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
         - docker tag ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION} ${DOCKER_USERNAME}/docker-grafana:latest
         - docker push ${DOCKER_USERNAME}/docker-grafana:latest

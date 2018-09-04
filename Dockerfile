@@ -73,12 +73,12 @@ RUN \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
-  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec ls -lh {} \; && \
-  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec ls -lh {} \; && \
+  #find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec ls -lh {} \; && \
+  #find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec ls -lh {} \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec upx -q -9 --no-progress {} > /dev/null \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec upx -q -9 --no-progress {} > /dev/null \; && \
-  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec ls -lh {} \; && \
-  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec ls -lh {} \; && \
+  #find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec ls -lh {} \; && \
+  #find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec ls -lh {} \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec cp -a {} /usr/share/grafana/bin/ \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec cp -a {} /usr/share/grafana/bin/ \; && \
   if [ -d public ] ; then \
@@ -90,30 +90,30 @@ RUN \
     exit 1 ; \
   fi
 
-#RUN \
-#  # install my favorite grafana plugins
-#  echo "install grafana plugins ..." && \
-#  for plugin in \
-#    blackmirror1-statusbygroup-panel \
-#    btplc-trend-box-panel \
-#    digiapulssi-breadcrumb-panel \
-#    grafana-clock-panel \
-#    grafana-piechart-panel \
-#    jdbranham-diagram-panel \
-#    michaeldmoore-annunciator-panel \
-#    mtanda-histogram-panel \
-#    natel-discrete-panel \
-#    neocat-cal-heatmap-panel \
-#    vonage-status-panel \
-#    petrslavotinek-carpetplot-panel \
-#    snuids-radar-panel \
-#    zuburqan-parity-report-panel ; \
-#  do \
-#     /usr/share/grafana/bin/grafana-cli \
-#      --pluginsDir "/usr/share/grafana/data/plugins" \
-#      plugins \
-#      install ${plugin} ; \
-#  done
+RUN \
+  # install my favorite grafana plugins
+  echo "install grafana plugins ..." && \
+  for plugin in \
+    blackmirror1-statusbygroup-panel \
+    btplc-trend-box-panel \
+    digiapulssi-breadcrumb-panel \
+    grafana-clock-panel \
+    grafana-piechart-panel \
+    jdbranham-diagram-panel \
+    michaeldmoore-annunciator-panel \
+    mtanda-histogram-panel \
+    natel-discrete-panel \
+    neocat-cal-heatmap-panel \
+    vonage-status-panel \
+    petrslavotinek-carpetplot-panel \
+    snuids-radar-panel \
+    zuburqan-parity-report-panel ; \
+  do \
+     /usr/share/grafana/bin/grafana-cli \
+      --pluginsDir "/usr/share/grafana/data/plugins" \
+      plugins \
+      install ${plugin} ; \
+  done
 
 CMD [ "/bin/bash" ]
 
