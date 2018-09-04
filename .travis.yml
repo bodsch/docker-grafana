@@ -19,11 +19,12 @@ jobs:
 
     - stage: test
       script:
-        - travis_wait 20 docker-compose --file docker-compose_example.yml build
-        - docker-compose --file docker-compose_example.yml up -d
+        - docker-compose --file docker-compose_example.yml config > docker-compose.yml
+        - travis_wait 20 docker-compose build
+        - docker-compose up -d
         - tests/test.sh
-        - docker-compose --file docker-compose_example.yml kill
-        - docker-compose --file docker-compose_example.yml down
+        - docker-compose kill
+        - docker-compose down
 
     - stage: build and push docker image
       script:

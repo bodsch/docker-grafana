@@ -212,9 +212,10 @@ run() {
   log_info "start init process ..."
 
   /usr/share/grafana/bin/grafana-server \
-    -homepath=/usr/share/grafana \
-    -pidfile=/tmp/grafana.pid \
-    -config=/etc/grafana/grafana.ini \
+    --homepath=/usr/share/grafana \
+    --pidfile=/tmp/grafana.pid \
+    --config=/etc/grafana/grafana.ini \
+    cfg:default.log.mode=console \
     cfg:default.paths.data=/usr/share/grafana \
     cfg:default.paths.logs=/var/log/grafana
 }

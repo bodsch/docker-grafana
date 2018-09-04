@@ -3,11 +3,11 @@ FROM golang:1-alpine as builder
 
 ARG BUILD_DATE
 ARG BUILD_VERSION
+ARG BUILD_TYPE=stable
 ARG GRAFANA_VERSION
 
 ENV \
   TERM=xterm \
-  BUILD_TYPE="stable" \
   PHANTOMJS_VERSION="2.11" \
   TZ='Europe/Berlin'
 
@@ -17,7 +17,7 @@ RUN \
   apk update  --quiet --no-cache && \
   apk upgrade --quiet --no-cache && \
   apk add     --quiet \
-    ca-certificates curl g++ git make python libuv nodejs nodejs-npm tzdata && \
+    ca-certificates curl g++ git make python libuv nodejs nodejs-npm upx tzdata && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
   echo "export TZ=${TZ}"                            > /etc/profile.d/grafana.sh && \
@@ -38,41 +38,47 @@ RUN \
   ln -s /phantomjs/phantomjs /usr/bin/
 
 RUN \
-  export GOPATH=/opt/go && \
-  export GOMAXPROCS=4 && \
   # build and install grafana
-  echo "get grafana sources ..." && \
-  go get github.com/grafana/grafana || true && \
+  export GOPATH=/opt/go && \
+  time go get github.com/grafana/grafana || true && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   # build stable packages
   if [ "${BUILD_TYPE}" == "stable" ] ; then \
     echo "switch to stable Tag v${GRAFANA_VERSION}" && \
     git checkout tags/v${GRAFANA_VERSION} 2> /dev/null ; \
-  fi && \
-  echo "grafana setup .." && \
+  fi
+
+RUN \
+  export GOPATH=/opt/go && \
+  export GOMAXPROCS=4 && \
+  export GOOS=linux && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  go run build.go setup  2> /dev/null && \
-  echo "grafana build .." && \
-  go run build.go build  2> /dev/null
+  time go run build.go setup  2> /dev/null && \
+  time go run build.go build  2> /dev/null
 
 RUN \
   # build frontend
-  echo "build frontend ..." && \
   export GOPATH=/opt/go && \
   export JOBS=4 && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  /usr/bin/npm add -g npm@latest --no-progress && \
-  /usr/bin/npm install           --no-progress && \
-  /usr/bin/npm install -g yarn   --no-progress && \
-  /usr/bin/yarn install --pure-lockfile --no-progress && \
-  /usr/bin/npm run build
+  time /usr/bin/npm add -g npm@latest --no-progress && \
+  time /usr/bin/npm install           --no-progress && \
+  time /usr/bin/npm install -g yarn   --no-progress && \
+  time /usr/bin/yarn install --pure-lockfile --no-progress && \
+  time /usr/bin/yarn run build
 
 RUN \
-  export GOPATH=/opt/go && \
   # move all packages to the right place
+  export GOPATH=/opt/go && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -ar ${GOPATH}/src/github.com/grafana/grafana/conf               /usr/share/grafana/ && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec ls -lh {} \; && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec ls -lh {} \; && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec upx -q -9 --no-progress {} > /dev/null \; && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec upx -q -9 --no-progress {} > /dev/null \; && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec ls -lh {} \; && \
+  find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec ls -lh {} \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec cp -a {} /usr/share/grafana/bin/ \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec cp -a {} /usr/share/grafana/bin/ \; && \
   if [ -d public ] ; then \
@@ -84,27 +90,30 @@ RUN \
     exit 1 ; \
   fi
 
-RUN \
-  # install my favorite grafana plugins
-  echo "install grafana plugins ..." && \
-  for plugin in \
-    blackmirror1-statusbygroup-panel \
-    btplc-trend-box-panel \
-    digiapulssi-breadcrumb-panel \
-    grafana-clock-panel \
-    grafana-piechart-panel \
-    jdbranham-diagram-panel \
-    michaeldmoore-annunciator-panel \
-    mtanda-histogram-panel \
-    natel-discrete-panel \
-    neocat-cal-heatmap-panel \
-    vonage-status-panel \
-    petrslavotinek-carpetplot-panel \
-    snuids-radar-panel \
-    zuburqan-parity-report-panel ; \
-  do \
-     /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins install ${plugin} ; \
-  done
+#RUN \
+#  # install my favorite grafana plugins
+#  echo "install grafana plugins ..." && \
+#  for plugin in \
+#    blackmirror1-statusbygroup-panel \
+#    btplc-trend-box-panel \
+#    digiapulssi-breadcrumb-panel \
+#    grafana-clock-panel \
+#    grafana-piechart-panel \
+#    jdbranham-diagram-panel \
+#    michaeldmoore-annunciator-panel \
+#    mtanda-histogram-panel \
+#    natel-discrete-panel \
+#    neocat-cal-heatmap-panel \
+#    vonage-status-panel \
+#    petrslavotinek-carpetplot-panel \
+#    snuids-radar-panel \
+#    zuburqan-parity-report-panel ; \
+#  do \
+#     /usr/share/grafana/bin/grafana-cli \
+#      --pluginsDir "/usr/share/grafana/data/plugins" \
+#      plugins \
+#      install ${plugin} ; \
+#  done
 
 CMD [ "/bin/bash" ]
 
