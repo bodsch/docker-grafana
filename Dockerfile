@@ -45,7 +45,7 @@ RUN \
 
 # build and install grafana
 RUN \
-  time go get github.com/grafana/grafana 2> /dev/null || true
+  go get github.com/grafana/grafana 2> /dev/null || true
 
 RUN \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
@@ -58,21 +58,20 @@ RUN \
 
 RUN \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  time go run build.go setup  2> /dev/null && \
-  time go run build.go build  2> /dev/null
+  go run build.go setup  2> /dev/null && \
+  go run build.go build  2> /dev/null
 
 # build frontend
 RUN \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
-  time /usr/bin/npm add -g npm@latest --no-progress && \
-  time /usr/bin/npm install           --no-progress && \
-  time /usr/bin/npm install -g yarn   --no-progress && \
-  time /usr/bin/yarn install --pure-lockfile --no-progress && \
-  time /usr/bin/yarn run build
+  /usr/bin/npm add -g npm@latest --no-progress && \
+  /usr/bin/npm install           --no-progress && \
+  /usr/bin/npm install -g yarn   --no-progress && \
+  /usr/bin/yarn install --pure-lockfile --no-progress && \
+  /usr/bin/yarn run build
 
 # move all packages to the right place
 RUN \
-  export GOPATH=/opt/go && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   mkdir -p /usr/share/grafana/bin/ && \
   cp -ar conf               /usr/share/grafana/ && \
@@ -120,6 +119,10 @@ CMD [ "/bin/bash" ]
 
 FROM alpine:3.8
 
+COPY --from=builder /etc/profile.d/grafana.sh /etc/profile.d/grafana.sh
+COPY --from=builder /usr/share/grafana /usr/share/grafana
+COPY --from=builder /usr/bin/phantomjs /usr/bin/phantomjs
+
 RUN \
   apk --quiet --no-cache update && \
   [[ -f /etc/profile.d/grafana.sh ]] && . /etc/profile.d/grafana.sh && \
@@ -134,10 +137,6 @@ RUN \
   rm -rf \
     /tmp/* \
     /var/cache/apk/*
-
-COPY --from=builder /etc/profile.d/grafana.sh /etc/profile.d/grafana.sh
-COPY --from=builder /usr/share/grafana /usr/share/grafana
-COPY --from=builder /usr/bin/phantomjs /usr/bin/phantomjs
 
 COPY rootfs/ /
 

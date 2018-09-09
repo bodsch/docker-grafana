@@ -10,7 +10,7 @@ INSTANCE = default
 BUILD_DATE      := $(shell date +%Y-%m-%d)
 BUILD_VERSION   := $(shell date +%y%m)
 BUILD_TYPE      ?= stable
-GRAFANA_VERSION ?= 5.2.3
+GRAFANA_VERSION ?= 5.2.4
 
 .PHONY: build push shell run start stop rm release
 
@@ -24,8 +24,6 @@ params:
 
 build:	params
 	docker build \
-		--force-rm \
-		--compress \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
