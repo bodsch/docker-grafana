@@ -133,6 +133,8 @@ RUN \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
   mkdir /var/log/grafana && \
+  mkdir -p /usr/share/grafana/tools/phantomjs && \
+  ln -s /usr/bin/phantomjs  /usr/share/grafana/tools/phantomjs/phantomjs && \
   apk del --quiet --purge .build-deps && \
   rm -rf \
     /tmp/* \
