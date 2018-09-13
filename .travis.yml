@@ -22,15 +22,24 @@ jobs:
       script:
         - travis_wait 30 make build-debian
 
-#    - stage: test
-#      script:
-#        - docker-compose --file docker-compose_example.yml config > docker-compose.yml
-#        - travis_wait 30 docker-compose build
-#        - docker-compose up -d
-#        - tests/test.sh
-#        - docker-compose kill
-#        - docker-compose down
-#
+    - stage: test alpine
+      script:
+        - docker-compose --file docker-compose_example-alpine.yml config > docker-compose.yml
+        - travis_wait 30 docker-compose build
+        - docker-compose up -d
+        - tests/test.sh
+        - docker-compose kill
+        - docker-compose down
+
+    - stage: test debian
+      script:
+        - docker-compose --file docker-compose_example-debian.yml config > docker-compose.yml
+        - travis_wait 30 docker-compose build
+        - docker-compose up -d
+        - tests/test.sh
+        - docker-compose kill
+        - docker-compose down
+
 #    - stage: build and push docker image
 #      script:
 #        - travis_wait 30 make build
