@@ -24,11 +24,21 @@ params:
 
 build:	params
 	docker build \
+		--file Dockerfile.alpine \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
 		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
-		--tag $(NS)/$(REPO):${GRAFANA_VERSION} .
+		--tag $(NS)/$(REPO):${GRAFANA_VERSION}-alpine .
+
+build-debian:	params
+	docker build \
+		--file Dockerfile.debian \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
+		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
+		--tag $(NS)/$(REPO):${GRAFANA_VERSION}-debian .
 
 clean:
 	docker rmi \
