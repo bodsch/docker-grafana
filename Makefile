@@ -65,6 +65,18 @@ shell:
 		$(NS)/$(REPO):${GRAFANA_VERSION} \
 		/bin/sh
 
+shell-debian:
+	docker run \
+		--rm \
+		--name $(NAME)-$(INSTANCE) \
+		--interactive \
+		--tty \
+		$(PORTS) \
+		$(VOLUMES) \
+		$(ENV) \
+		$(NS)/$(REPO):${GRAFANA_VERSION}-debian \
+		/bin/bash
+
 run:
 	docker run \
 		--rm \

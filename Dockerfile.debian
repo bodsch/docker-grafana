@@ -14,7 +14,7 @@ ENV \
   GOMAXPROCS=4 \
   GOOS=linux \
   JOBS=4 \
-  PHANTOMJS_VERSION="2.11"
+  PHANTOMJS_VERSION="2.1.1"
 
 # ---------------------------------------------------------------------------------------
 
@@ -33,6 +33,7 @@ RUN \
 RUN \
   apt-get install --assume-yes \
     apt-transport-https \
+    bzip2 \
     lsb-release \
     ca-certificates \
     curl \
@@ -42,7 +43,9 @@ RUN \
     make \
     git \
     libuv1 \
-    upx-ucl
+    upx-ucl \
+    libfontconfig1 \
+    libfreetype6
 
 RUN \
   curl -sL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
@@ -55,27 +58,33 @@ RUN \
   apt-get install --assume-yes \
     nodejs yarn
 
+# download and install phantomJS
 RUN \
-  apt-get install --assume-yes \
-    phantomjs
+  set -e && \
+  export QT_QPA_PLATFORM= && \
+  echo "get phantomjs ${PHANTOMJS_VERSION} from external ressources ..." && \
+  curl \
+    --silent \
+    --location \
+    --retry 3 \
+    https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2 \
+  | bunzip2 \
+  | tar x -C /tmp/ && \
+  mv /tmp/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64/bin/phantomjs /usr/bin/ && \
+  ldd /usr/bin/phantomjs
+
+RUN \
+  /usr/bin/phantomjs --version
+
+#RUN \
+#  apt-get install --assume-yes \
+#    phantomjs
 
 RUN \
   echo "export TZ=${TZ}"                            > /etc/profile.d/grafana.sh && \
   echo "export BUILD_DATE=${BUILD_DATE}"           >> /etc/profile.d/grafana.sh && \
   echo "export BUILD_TYPE=${BUILD_TYPE}"           >> /etc/profile.d/grafana.sh
-#
-## download and install phantomJS
-#RUN \
-#  echo "get phantomjs ${PHANTOMJS_VERSION} from external ressources ..." && \
-#  curl \
-#    --silent \
-#    --location \
-#    --retry 3 \
-#    https://github.com/Overbryd/docker-phantomjs-alpine/releases/download/${PHANTOMJS_VERSION}/phantomjs-alpine-x86_64.tar.bz2 \
-#  | bunzip2 \
-#  | tar x -C / && \
-#  ln -s /phantomjs/phantomjs /usr/bin/
-#
+
 ## build and install grafana
 RUN \
   go get github.com/grafana/grafana 2> /dev/null || true
@@ -96,7 +105,6 @@ RUN \
 
 # build frontend
 RUN \
-  export QT_QPA_PLATFORM=offscreen && \
   cd ${GOPATH}/src/github.com/grafana/grafana && \
   /usr/bin/npm add -g npm@latest --no-progress && \
   /usr/bin/npm install           --no-progress && \
@@ -114,7 +122,6 @@ RUN \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-cli    -exec cp -a {} /usr/share/grafana/bin/ \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/bin/ -type f -name grafana-server -exec cp -a {} /usr/share/grafana/bin/ \; && \
   find ${GOPATH}/src/github.com/grafana/grafana/     -type d -name tools          -exec cp -ra {} /usr/share/grafana/    \; && \
-
   if [[ -d public ]] ; then \
     cp -ar ${GOPATH}/src/github.com/grafana/grafana/public           /usr/share/grafana/ ; \
   elif [[ -d public_gen ]] ; then \
@@ -124,8 +131,8 @@ RUN \
     exit 1 ; \
   fi
 
+# install my favorite grafana plugins
 RUN \
-  # install my favorite grafana plugins
   echo "install grafana plugins ..." && \
   for plugin in \
     blackmirror1-statusbygroup-panel \
@@ -149,33 +156,36 @@ RUN \
       install ${plugin} ; \
   done
 
+#RUN \
+#  tar -czf /tmp/libQt.tar.gz  /usr/lib/x86_64-linux-gnu/libQt5* /usr/lib/x86_64-linux-gnu/libGL*
+
 CMD [ "/bin/bash" ]
 
 # ---------------------------------------------------------------------------------------
 
 FROM debian:9-slim
 
-ENV \
-  QT_QPA_PLATFORM offscreen
-
 COPY --from=builder /etc/profile.d/grafana.sh /etc/profile.d/grafana.sh
 COPY --from=builder /usr/share/grafana /usr/share/grafana
-COPY --from=builder /usr/lib/phantomjs /usr/lib/phantomjs
+#COPY --from=builder /usr/lib/phantomjs /usr/lib/phantomjs
+# COPY --from=builder /tmp/libQt.tar.gz /var/tmp
+#COPY --from=builder /usr/lib/x86_64-linux-gnu/libQt5* /usr/lib/x86_64-linux-gnu/
 
 RUN \
   apt-get update && \
   [ -f /etc/profile.d/grafana.sh ] && . /etc/profile.d/grafana.sh && \
   apt-get install --no-install-recommends --assume-yes \
-    ca-certificates curl jq mariadb-client netcat-openbsd pwgen sqlite yajl-tools \
-    libqt5webkit5 \
-    libqt5printsupport5 \
-    libqt5widgets5 \
-    libqt5webkit5 \
-    libqt5gui5 \
-    libqt5core5a \
+    ca-certificates curl jq mariadb-client net-tools netcat-openbsd pwgen procps sqlite yajl-tools \
+    libfontconfig1 \
+#    libqt5webkit5 \
+#    libqt5printsupport5 \
+#    libqt5widgets5 \
+#    libqt5webkit5 \
+#    libqt5gui5 \
+#    libqt5core5a \
     && \
   /usr/share/grafana/bin/grafana-server -v && \
-  /usr/lib/phantomjs/phantomjs --version && \
+  /usr/share/grafana/tools/phantomjs/phantomjs --version && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
   mkdir /var/log/grafana && \
