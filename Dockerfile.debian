@@ -70,15 +70,7 @@ RUN \
     https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2 \
   | bunzip2 \
   | tar x -C /tmp/ && \
-  mv /tmp/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64/bin/phantomjs /usr/bin/ && \
-  ldd /usr/bin/phantomjs
-
-RUN \
-  /usr/bin/phantomjs --version
-
-#RUN \
-#  apt-get install --assume-yes \
-#    phantomjs
+  mv /tmp/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64/bin/phantomjs /usr/bin/
 
 RUN \
   echo "export TZ=${TZ}"                            > /etc/profile.d/grafana.sh && \
@@ -167,25 +159,14 @@ FROM debian:9-slim
 
 COPY --from=builder /etc/profile.d/grafana.sh /etc/profile.d/grafana.sh
 COPY --from=builder /usr/share/grafana /usr/share/grafana
-#COPY --from=builder /usr/lib/phantomjs /usr/lib/phantomjs
-# COPY --from=builder /tmp/libQt.tar.gz /var/tmp
-#COPY --from=builder /usr/lib/x86_64-linux-gnu/libQt5* /usr/lib/x86_64-linux-gnu/
 
 RUN \
   apt-get update && \
-  [ -f /etc/profile.d/grafana.sh ] && . /etc/profile.d/grafana.sh && \
+  [ -f /etc/profile.d/grafana.sh ] && . /etc/profile && \
   apt-get install --no-install-recommends --assume-yes \
     ca-certificates curl jq mariadb-client net-tools netcat-openbsd pwgen procps sqlite yajl-tools \
     libfontconfig1 \
-#    libqt5webkit5 \
-#    libqt5printsupport5 \
-#    libqt5widgets5 \
-#    libqt5webkit5 \
-#    libqt5gui5 \
-#    libqt5core5a \
     && \
-  /usr/share/grafana/bin/grafana-server -v && \
-  /usr/share/grafana/tools/phantomjs/phantomjs --version && \
   cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
   echo ${TZ} > /etc/timezone && \
   mkdir /var/log/grafana && \

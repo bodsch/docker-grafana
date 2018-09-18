@@ -31,7 +31,7 @@ build:	params
 		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
 		--tag $(NS)/$(REPO):${GRAFANA_VERSION}-alpine .
 
-build-debian:	params
+debian-build:	params
 	docker build \
 		--file Dockerfile.debian \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
@@ -65,7 +65,7 @@ shell:
 		$(NS)/$(REPO):${GRAFANA_VERSION} \
 		/bin/sh
 
-shell-debian:
+debian-shell:
 	docker run \
 		--rm \
 		--name $(NAME)-$(INSTANCE) \
@@ -101,6 +101,16 @@ start:
 		$(VOLUMES) \
 		$(ENV) \
 		$(NS)/$(REPO):${GRAFANA_VERSION}
+
+debian-start:
+	docker run \
+		--rm \
+		--detach \
+		--name $(NAME)-$(INSTANCE) \
+		$(PORTS) \
+		$(VOLUMES) \
+		$(ENV) \
+		$(NS)/$(REPO):${GRAFANA_VERSION}-debian
 
 stop:
 	docker stop \
