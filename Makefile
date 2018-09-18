@@ -29,7 +29,7 @@ build:	params
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
 		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
-		--tag $(NS)/$(REPO):${GRAFANA_VERSION}-alpine .
+		--tag $(NS)/$(REPO):${GRAFANA_VERSION} .
 
 debian-build:	params
 	docker build \
