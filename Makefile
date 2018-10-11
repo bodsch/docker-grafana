@@ -24,11 +24,21 @@ params:
 
 build:	params
 	docker build \
+		--file Dockerfile.alpine \
 		--build-arg BUILD_DATE=$(BUILD_DATE) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
 		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
 		--tag $(NS)/$(REPO):${GRAFANA_VERSION} .
+
+debian-build:	params
+	docker build \
+		--file Dockerfile.debian \
+		--build-arg BUILD_DATE=$(BUILD_DATE) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
+		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
+		--tag $(NS)/$(REPO):${GRAFANA_VERSION}-debian .
 
 clean:
 	docker rmi \
@@ -55,6 +65,18 @@ shell:
 		$(NS)/$(REPO):${GRAFANA_VERSION} \
 		/bin/sh
 
+debian-shell:
+	docker run \
+		--rm \
+		--name $(NAME)-$(INSTANCE) \
+		--interactive \
+		--tty \
+		$(PORTS) \
+		$(VOLUMES) \
+		$(ENV) \
+		$(NS)/$(REPO):${GRAFANA_VERSION}-debian \
+		/bin/bash
+
 run:
 	docker run \
 		--rm \
@@ -79,6 +101,16 @@ start:
 		$(VOLUMES) \
 		$(ENV) \
 		$(NS)/$(REPO):${GRAFANA_VERSION}
+
+debian-start:
+	docker run \
+		--rm \
+		--detach \
+		--name $(NAME)-$(INSTANCE) \
+		$(PORTS) \
+		$(VOLUMES) \
+		$(ENV) \
+		$(NS)/$(REPO):${GRAFANA_VERSION}-debian
 
 stop:
 	docker stop \

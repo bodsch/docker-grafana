@@ -6,11 +6,12 @@ services:
     restart: always
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.alpine
       args:
         - BUILD_DATE=${BUILD_DATE}
         - BUILD_VERSION=${BUILD_VERSION}
         - GRAFANA_VERSION=${GRAFANA_VERSION}
+    # image: bodsch/docker-grafana:5.2.2
     container_name: grafana-test
     hostname: grafana-test
     ports:

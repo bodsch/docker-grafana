@@ -16,11 +16,6 @@ ENV \
   PHANTOMJS_VERSION="2.11"
 
 # ---------------------------------------------------------------------------------------
-#ADD build /build
-
-#RUN \
-#  /build/installer.sh
-
 
 RUN \
   apk update  --quiet && \

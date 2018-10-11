@@ -7,30 +7,52 @@ services:
 
 env:
   global:
-    - GRAFANA_VERSION=${GRAFANA_VERSION:-5.2.3}
+    - GRAFANA_VERSION=${GRAFANA_VERSION:-5.2.4}
     - BUILD_DATE=$(date +"%Y-%m-%d")
     - BUILD_VERSION=$(date +%y%m)
     - BUILD_TYPE=${BUILD_TYPE:-stable}
 
 jobs:
   include:
-    - stage: build
-      script:
-        - travis_wait 30 make build
 
-    - stage: test
+    - stage: build debian based
       script:
-        - docker-compose --file docker-compose_example.yml config > docker-compose.yml
+        - travis_wait 30 make debian-build
+
+    - stage: test debian
+      script:
+        - docker-compose --file docker-compose_example-debian.yml config > docker-compose.yml
         - travis_wait 30 docker-compose build
         - docker-compose up -d
         - tests/test.sh
         - docker-compose kill
         - docker-compose down
 
-    - stage: build and push docker image
+    - stage: build debian and push docker image
+      script:
+        - travis_wait 30 make debian-build
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker tag  ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}-debian ${DOCKER_USERNAME}/docker-grafana:latest-debian
+        - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}-debian
+        - docker push ${DOCKER_USERNAME}/docker-grafana:latest-debian
+
+    - stage: build alpine based
+      script:
+        - travis_wait 30 make build
+
+    - stage: test alpine
+      script:
+        - docker-compose --file docker-compose_example-alpine.yml config > docker-compose.yml
+        - travis_wait 30 docker-compose build
+        - docker-compose up -d
+        - tests/test.sh
+        - docker-compose kill
+        - docker-compose down
+
+    - stage: build alpine and push docker image
       script:
         - travis_wait 30 make build
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-#        - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
-        - docker tag ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION} ${DOCKER_USERNAME}/docker-grafana:latest
+        - docker tag  ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION} ${DOCKER_USERNAME}/docker-grafana:latest
+        - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
         - docker push ${DOCKER_USERNAME}/docker-grafana:latest
