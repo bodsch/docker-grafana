@@ -1,9 +1,0 @@
-PORTS = \
-  --publish 3000:3000
-
-VOLUMES = \
-  --volume /var/log/docker:/var/log
-
-ENV = \
-  --env URL_PATH="/" \
-  --env SQLITE_PATH=""

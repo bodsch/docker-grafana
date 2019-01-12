@@ -1,0 +1,12 @@
+
+DATA_DIR="${PWD}/data"
+
+PORTS="
+  --publish 3000:3000"
+
+VOLUMES=""
+#  --volume ${DATA_DIR}/log:/var/log \
+#  --volume ${DATA_DIR}/srv:/srv"
+
+ENV=""
+#  --env TEST_USER=true"

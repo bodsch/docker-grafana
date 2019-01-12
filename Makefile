@@ -1,129 +1,45 @@
+export GIT_SHA1          := $(shell git rev-parse --short HEAD)
+export DOCKER_IMAGE_NAME := grafana
+export DOCKER_NAME_SPACE := ${USER}
+export DOCKER_VERSION    ?= latest
+export BUILD_DATE        := $(shell date +%Y-%m-%d)
+export BUILD_VERSION     := $(shell date +%y%m)
+export BUILD_TYPE        ?= stable
+export GRAFANA_VERSION   ?= 5.4.2
 
-include env_make
 
-NS       = bodsch
-
-REPO     = docker-grafana
-NAME     = grafana
-INSTANCE = default
-
-BUILD_DATE      := $(shell date +%Y-%m-%d)
-BUILD_VERSION   := $(shell date +%y%m)
-BUILD_TYPE      ?= stable
-GRAFANA_VERSION ?= 5.4.2
-
-.PHONY: build push shell run start stop rm release
+.PHONY: build shell run exec start stop clean
 
 default: build
 
-params:
-	@echo ""
-	@echo " GRAFANA_VERSION: ${GRAFANA_VERSION}"
-	@echo " BUILD_DATE     : $(BUILD_DATE)"
-	@echo ""
+build:
+	@hooks/build
 
-build:	params
-	docker build \
-		--file Dockerfile.alpine \
-		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
-		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
-		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
-		--tag $(NS)/$(REPO):${GRAFANA_VERSION} .
-
-debian-build:	params
-	docker build \
-		--file Dockerfile.debian \
-		--build-arg BUILD_DATE=$(BUILD_DATE) \
-		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
-		--build-arg BUILD_TYPE=$(BUILD_TYPE) \
-		--build-arg GRAFANA_VERSION=${GRAFANA_VERSION} \
-		--tag $(NS)/$(REPO):${GRAFANA_VERSION}-debian .
-
-clean:
-	docker rmi \
-		--force \
-		$(NS)/$(REPO):${GRAFANA_VERSION}
-
-history:
-	docker history \
-		$(NS)/$(REPO):${GRAFANA_VERSION}
-
-push:	params
-	docker push \
-		$(NS)/$(REPO):${GRAFANA_VERSION}
-
-shell:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		--interactive \
-		--tty \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${GRAFANA_VERSION} \
-		/bin/sh
-
-debian-shell:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		--interactive \
-		--tty \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${GRAFANA_VERSION}-debian \
-		/bin/bash
+hell:
+	@hooks/shell
 
 run:
-	docker run \
-		--rm \
-		--name $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${GRAFANA_VERSION}
+	@hooks/run
 
 exec:
-	docker exec \
-		--interactive \
-		--tty \
-		$(NAME)-$(INSTANCE) \
-		/bin/sh
+	@hooks/exec
 
 start:
-	docker run \
-		--detach \
-		--name $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${GRAFANA_VERSION}
-
-debian-start:
-	docker run \
-		--rm \
-		--detach \
-		--name $(NAME)-$(INSTANCE) \
-		$(PORTS) \
-		$(VOLUMES) \
-		$(ENV) \
-		$(NS)/$(REPO):${GRAFANA_VERSION}-debian
+	@hooks/start
 
 stop:
-	docker stop \
-		$(NAME)-$(INSTANCE)
+	@hooks/stop
 
-rm:
-	docker rm \
-		$(NAME)-$(INSTANCE)
+clean:
+	@hooks/clean
 
-compose:
-	docker-compose \
-		--file docker-compose_example.yml \
-		up
+compose-file:
+	@hooks/compose-file
 
-release: build
-	make push -e VERSION=${GRAFANA_VERSION}
+linter:
+	@tests/linter.sh
+
+integration_test:
+	@tests/integration_test.sh
+
+test: linter integration_test

@@ -61,7 +61,7 @@ api_request() {
 inspect() {
 
   echo "inspect needed containers"
-  for d in grafana-test
+  for d in $(docker-compose ps | tail +3 | awk  '{print($1)}')
   do
     # docker inspect --format "{{lower .Name}}" ${d}
     docker inspect --format '{{with .State}} {{$.Name}} has pid {{.Pid}} {{end}}' ${d}
@@ -71,7 +71,19 @@ inspect() {
 echo "wait 1 minute1 for start"
 sleep 1m
 
-inspect
+if [[ $(docker-compose ps | tail +3 | wc -l) -eq 1 ]]
+then
+  inspect
 
-wait_for_grafana
-api_request
+  wait_for_grafana
+  api_request
+
+  exit 0
+else
+  echo "please run "
+  echo " make compose-file"
+  echo " docker-compose up -d"
+  echo "before"
+
+  exit 1
+fi
