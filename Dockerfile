@@ -177,7 +177,7 @@ COPY --from=builder /usr/share/grafana        /usr/share/grafana
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# hadolint ignore=DL3014,DL3015
+# hadolint ignore=SC1091,DL3008,DL3014,DL3015
 RUN \
   apt-get update && \
   [ -f /etc/profile.d/grafana.sh ] && . /etc/profile && \
