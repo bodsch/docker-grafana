@@ -71,7 +71,7 @@ inspect() {
 echo "wait 1 minute1 for start"
 sleep 1m
 
-if [[ $(docker-compose ps | tail +3 | wc -l) -eq 1 ]]
+if [[ $(docker-compose ps | grep -c grafana-test) -eq 1 ]]
 then
   inspect
 
