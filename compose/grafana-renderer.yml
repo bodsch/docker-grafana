@@ -1,0 +1,11 @@
+---
+version: '3.3'
+
+services:
+  renderer:
+    hostname: renderer
+    image: grafana/grafana-image-renderer:latest
+    ports:
+      - 8081:8081
+    networks:
+      - backend

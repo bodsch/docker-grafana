@@ -1,0 +1,43 @@
+---
+version: '3.3'
+
+services:
+
+  grafana:
+    restart: always
+    #image: grafana/grafana:${GRAFANA_VERSION}
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE}
+        - BUILD_VERSION=${BUILD_VERSION}
+        - BUILD_TYPE=${BUILD_TYPE}
+        - GRAFANA_VERSION=${GRAFANA_VERSION}
+    container_name: grafana
+    hostname: grafana
+    environment:
+      - URL_PATH
+      - LOG_LEVEL
+      - ROUTER_LOGGING
+    volumes:
+      - ${PWD}/import/provisioning:/etc/grafana/provisioning:ro
+      - ${PWD}/import/dashboards:/var/lib/grafana/dashboards:ro
+#    volume:
+#      - import/
+#    command: /init/run.sh
+#    entrypoint: ''
+    ports:
+      - 3000:3000
+    links:
+      - graphite
+      - influxdb
+#      - renderer
+    depends_on:
+      - graphite
+      - influxdb
+#      - renderer
+    networks:
+      - frontend
+      - backend
+      - database

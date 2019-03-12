@@ -17,4 +17,4 @@ docker run \
   ${VOLUMES} \
   ${ENV} \
   ${DOCKER_NAME_SPACE}/${DOCKER_IMAGE_NAME}:${DOCKER_VERSION} \
-  /bin/sh
+  /bin/bash
