@@ -98,7 +98,7 @@ prepare() {
 
     i=$((${#SQLITE_PATH}-1))
 
-    if ( [[ ${i} -gt 1 ]] && [[ "${SQLITE_PATH:$i:1}" != "/" ]] )
+    if [[ ${i} -gt 1 ]] && [[ "${SQLITE_PATH:$i:1}" != "/" ]]
     then
       SQLITE_PATH="${SQLITE_PATH}/"
     fi
@@ -119,7 +119,7 @@ prepare() {
   SESSION_PROVIDER="file"
   SESSION_CONFIG="sessions"
 
-  if [[ ! -z "${MEMCACHE_HOST}" ]]
+  if [[ -n "${MEMCACHE_HOST}" ]]
   then
     SESSION_PROVIDER="memcache"
     SESSION_CONFIG="${MEMCACHE_HOST}:${MEMCACHE_PORT}"
@@ -130,7 +130,7 @@ prepare() {
   carbon_host=
   ENABLE_METRICS="false"
 
-  if [[ ! -z ${CARBON_HOST} ]]
+  if [[ -n ${CARBON_HOST} ]]
   then
     carbon_host="${CARBON_HOST}:${CARBON_PORT}"
     ENABLE_METRICS="true"
@@ -151,7 +151,7 @@ prepare() {
     -e 's|%CARBON_HOST%|'${carbon_host}'|g' \
     -e 's|%ORGANISATION%|'${ORGANISATION}'|g' \
     -e 's|%SQLITE_PATH%|'${SQLITE_PATH}'|g' \
-    ${GF_PATHS_CONFIG}
+    "${GF_PATHS_CONFIG}"
 }
 
 
@@ -188,10 +188,10 @@ start_grafana() {
 #    ps ax -o pid,args  | grep -v grep | grep grafana-server
 #    netstat -tlnp | grep ":3000"
 
-    grafana_up=$(netstat -tlnp | grep ":3000" | wc -l)
-    pid=$(ps ax -o pid,args  | grep -v grep | grep grafana-server | awk '{print $1}')
+    grafana_up=$(netstat -tlnp | grep -c ":3000")
+    pid=$(ps ax -o pid,args  | pgrep -v grep | pgrep grafana-server | awk '{print $1}')
 
-    if [[ ${grafana_up} -eq 1 ]] && [[ ! -z ${pid} ]]
+    if [[ ${grafana_up} -eq 1 ]] && [[ -n ${pid} ]]
     then
       break
     fi
@@ -212,11 +212,11 @@ start_grafana() {
 
 kill_grafana() {
 
-  grafana_pid=$(ps ax | grep grafana | grep -v grep | awk '{print $1}')
+  grafana_pid=$(ps ax | pgrep -v grep | pgrep grafana | awk '{print $1}')
 
-  if [[ ! -z "${grafana_pid}" ]]
+  if [[ -n "${grafana_pid}" ]]
   then
-    kill -15 ${grafana_pid} > /dev/null 2> /dev/null
+    kill -15 "${grafana_pid}" > /dev/null 2> /dev/null
 
     sleep 2s
   fi
@@ -229,14 +229,16 @@ update_organisation() {
 
   curl_opts="--silent --user admin:admin"
 
-  data=$(curl ${curl_opts} http://localhost:3000/api/org)
+  data=$(curl \
+    "${curl_opts}" \
+    http://localhost:3000/api/org)
 
-  name=$(echo ${data} | jq --raw-output '.name')
+  name=$(echo "${data}" | jq --raw-output '.name')
 
   if [[ "${name}" != "${ORGANISATION}" ]]
   then
     data=$(curl \
-      ${curl_opts} \
+      "${curl_opts}" \
       --header 'Content-Type: application/json;charset=UTF-8' \
       --request PUT \
       --data-binary "{\"name\":\"${ORGANISATION}\"}" \

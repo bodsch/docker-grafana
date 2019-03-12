@@ -105,8 +105,6 @@ remove_token() {
     parameters+=("--header" "${HEADERS[$i]}");
   done
 
-  cat ${API_TOKEN_FILE}
-
   curl \
     ${curl_opts} \
     "${parameters[@]}" \
