@@ -43,3 +43,5 @@ services:
       #   "group_dn": "${LDAP_GROUP_DN}",
       #   "search_filter": "${LDAP_SEARCH_FILTER}"
       # }'
+    volumes:
+      - import/provisioning:/etc/grafana/provisioning:ro

@@ -11,7 +11,39 @@ BUILD_DATE=${BUILD_DATE}
 BUILD_VERSION=${BUILD_VERSION}
 GRAFANA_VERSION=${GRAFANA_VERSION}
 
+ORGANISATION=ACME
+
+GF_SERVER_ROOT_URL=http://localhost/grafana
+GF_SECURITY_ADMIN_PASSWORD=secret
+
+# URL_PATH=/grafana
+LOG_LEVEL=info
+ROUTER_LOGGING=false
+
+# graphite support
+CARBON_HOST=graphite
+CARBON_PORT=2003
+
+# influx
+INFLUXDB_DB=icinga2
+INFLUXDB_HTTP_AUTH_ENABLED=true
+INFLUXDB_ADMIN_USER=admin
+INFLUXDB_ADMIN_PASSWORD=hqkBGSQW34iDRpbU
+INFLUXDB_USER=icinga2
+INFLUXDB_USER_PASSWORD=w7uK6nfcxR6ZBtZC
+
+
 EOF
+
+docker-compose \
+  --file compose/head.yml \
+  --file compose/nginx.yml \
+  --file compose/graphite.yml \
+  --file compose/influxdb.yml \
+  --file compose/grafana.yml \
+  config > docker-compose.yml
+
+exit 0
 
 docker-compose \
   --file docker-compose_example.yml \

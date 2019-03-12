@@ -1,5 +1,6 @@
-
-FROM golang:1-stretch as builder
+ARG GRAFANA_VERSION
+# use the official container as base
+FROM grafana/grafana:${GRAFANA_VERSION}
 
 ARG VCS_REF
 ARG BUILD_DATE
@@ -10,182 +11,32 @@ ARG GRAFANA_VERSION
 ENV \
   TERM=xterm-256color \
   DEBIAN_FRONTEND=noninteractive \
-  TZ='Europe/Berlin' \
-  GOPATH=/opt/go \
-  GOMAXPROCS=4 \
-  GOOS=linux \
-  JOBS=4 \
-  PHANTOMJS_VERSION="2.1.1"
+  TZ='Europe/Berlin'
 
-# ---------------------------------------------------------------------------------------
+# hadolint ignore=DL3002
+USER root
 
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# hadolint ignore=DL4005
+# hadolint ignore=SC1091,DL3008,DL3014,DL3015,DL4005,DL4006
 RUN \
   chsh -s /bin/bash && \
   ln -sf /bin/bash /bin/sh && \
   ln -sf "/usr/share/zoneinfo/${TZ}" /etc/localtime && \
-  ln -s  /etc/default /etc/sysconfig
-
-RUN \
-  apt-get update
-
-RUN \
-  apt-get dist-upgrade --assume-yes
-
-# hadolint ignore=DL3008,DL3014,DL3015
-RUN \
-  apt-get install --assume-yes \
-    apt-transport-https \
-    bzip2 \
-    lsb-release \
-    ca-certificates \
-    curl \
-    gnupg \
-    gcc \
-    g++ \
-    make \
-    git \
-    libuv1 \
-    upx-ucl \
-    libfontconfig1 \
-    libfreetype6
-
-RUN \
-  curl -sL https://deb.nodesource.com/gpgkey/nodesource.gpg.key | apt-key add - && \
-  echo 'deb https://deb.nodesource.com/node_10.x stretch main' > /etc/apt/sources.list.d/nodesource.list && \
-  curl -sL https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
-  echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list && \
-  apt-get update
-
-# hadolint ignore=DL3008,DL3014,DL3015
-RUN \
-  apt-get install --assume-yes \
-    nodejs yarn
-
-# download and install phantomJS
-RUN \
-  set -e && \
-  export QT_QPA_PLATFORM= && \
-  echo "get phantomjs \"${PHANTOMJS_VERSION}\" from external ressources ..." && \
-  curl \
-    --silent \
-    --location \
-    --retry 3 \
-    "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64.tar.bz2" \
-  | bunzip2 \
-  | tar x -C /tmp/ && \
-  mv "/tmp/phantomjs-${PHANTOMJS_VERSION}-linux-x86_64/bin/phantomjs" /usr/bin/
-
-RUN \
-  echo "export TZ=${TZ}"                            > /etc/profile.d/grafana.sh && \
-  echo "export BUILD_DATE=${BUILD_DATE}"           >> /etc/profile.d/grafana.sh && \
-  echo "export BUILD_TYPE=${BUILD_TYPE}"           >> /etc/profile.d/grafana.sh
-
-## build and install grafana
-RUN \
-  go get github.com/grafana/grafana 2> /dev/null || true
-
-WORKDIR ${GOPATH}/src/github.com/grafana/grafana
-
-RUN \
-  if [[ "${BUILD_TYPE}" = "stable" ]] ; then \
-    echo "switch to stable Tag v${GRAFANA_VERSION}" && \
-    git checkout "tags/v${GRAFANA_VERSION}" 2> /dev/null ; \
-  fi && \
-  GRAFANA_VERSION=$(git describe --tags --always | sed 's/^v//') && \
-  echo "export GRAFANA_VERSION=${GRAFANA_VERSION}" >> /etc/profile.d/grafana.sh
-
-RUN \
-  go run build.go setup  2> /dev/null && \
-  go run build.go build  2> /dev/null
-
-# build frontend
-RUN \
-  /usr/bin/npm add -g npm@latest --no-progress && \
-  /usr/bin/npm install           --no-progress && \
-  /usr/bin/npm install -g yarn   --no-progress && \
-  /usr/bin/yarn install --pure-lockfile --no-progress && \
-  /usr/bin/yarn run build
-
-  # sh -c 'pnmtopng "$1" > "$1.png"' _ {} \;
-
-# move all packages to the right place
-# hadolint ignore=SC2227
-RUN \
-  mkdir -p /usr/share/grafana/bin/ && \
-  cp -ar conf               /usr/share/grafana/ && \
-  upx \
-    --best \
-    --no-progress \
-    --no-color \
-    -o/usr/share/grafana/bin/grafana-cli \
-    bin/linux-amd64/grafana-cli && \
-  upx \
-    --best \
-    --no-progress \
-    --no-color \
-    -o/usr/share/grafana/bin/grafana-server \
-    bin/linux-amd64/grafana-server && \
-  cp -rav tools /usr/share/grafana/ && \
-  #find bin/ -type f -name grafana-cli    -exec sh -c 'upx -9 --no-progress "${1}"' _ {} \; && \
-  #find bin/ -type f -name grafana-server -exec sh -c 'upx -9 --no-progress "${1}"' _ {} \; && \
-  #find bin/ -type f -name grafana-cli    -exec sh -c 'cp  -av ${1} /usr/share/grafana/bin/' _ {} \; && \
-  #find bin/ -type f -name grafana-server -exec sh -c 'cp  -av ${1} /usr/share/grafana/bin/' _ {} \; && \
-  #find .    -type d -name tools          -exec sh -c 'cp -rav ${1} /usr/share/grafana/' _ {} \; && \
-  if [[ -d public ]] ; then \
-    cp -ar "${GOPATH}/src/github.com/grafana/grafana/public"           /usr/share/grafana/ ; \
-  elif [[ -d public_gen ]] ; then \
-    cp -ar "${GOPATH}/src/github.com/grafana/grafana/public_gen"       /usr/share/grafana/public ; \
-  else \
-    echo "missing 'public' directory" \
-    exit 1 ; \
-  fi
-
-# install my favorite grafana plugins
-RUN \
-  echo "install my favorite grafana plugins ..." && \
-  for plugin in \
-    blackmirror1-statusbygroup-panel \
-    btplc-trend-box-panel \
-    digiapulssi-breadcrumb-panel \
-    grafana-clock-panel \
-    grafana-piechart-panel \
-    jdbranham-diagram-panel \
-    michaeldmoore-annunciator-panel \
-    mtanda-histogram-panel \
-    natel-discrete-panel \
-    neocat-cal-heatmap-panel \
-    vonage-status-panel \
-    petrslavotinek-carpetplot-panel \
-    snuids-radar-panel \
-    zuburqan-parity-report-panel ; \
-  do \
-     /usr/share/grafana/bin/grafana-cli \
-      --pluginsDir "/usr/share/grafana/data/plugins" \
-      plugins \
-      install ${plugin} ; \
-  done
-
-# ---------------------------------------------------------------------------------------
-
-FROM debian:9-slim
-
-COPY --from=builder /etc/profile.d/grafana.sh /etc/profile.d/grafana.sh
-COPY --from=builder /usr/share/grafana        /usr/share/grafana
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# hadolint ignore=SC1091,DL3008,DL3014,DL3015
-RUN \
+  echo "${TZ}" > /etc/timezone && \
   apt-get update && \
+  echo "export BUILD_DATE=${BUILD_DATE}"           >  /etc/profile.d/grafana.sh && \
+  echo "export BUILD_TYPE=${BUILD_TYPE}"           >> /etc/profile.d/grafana.sh && \
+  echo "export GRAFANA_VERSION=${GRAFANA_VERSION}" >> /etc/profile.d/grafana.sh && \
+  [ -d /home/grafana ] || mkdir /home/grafana && \
+  chown grafana:grafana /home/grafana && \
   [ -f /etc/profile.d/grafana.sh ] && . /etc/profile && \
+  cp /etc/grafana/grafana.ini /home/grafana/grafana.ini-DIST && \
   apt-get install --no-install-recommends --assume-yes \
     ca-certificates \
     curl \
     jq \
+    less \
     mariadb-client \
+    nano \
     net-tools \
     netcat-openbsd \
     pwgen \
@@ -194,11 +45,6 @@ RUN \
     yajl-tools \
     libfontconfig1 \
     && \
-  cp "/usr/share/zoneinfo/${TZ}" /etc/localtime && \
-  echo "${TZ}" > /etc/timezone && \
-  mkdir /var/log/grafana && \
-  echo 'Yes, do as I say!' | apt-get remove \
-    e2fsprogs sysvinit-utils && \
   apt-get clean && \
   apt autoremove --assume-yes && \
   rm -rf \
@@ -211,13 +57,11 @@ RUN \
 
 COPY rootfs/ /
 
-VOLUME ["/usr/share/grafana/data", "/usr/share/grafana/public/dashboards", "/opt/grafana/dashboards"]
+VOLUME ["/usr/share/grafana/data", "/usr/share/grafana/public/dashboards", "/opt/grafana/dashboards","/etc/grafana/provisioning"]
 
-WORKDIR /usr/share/grafana
+USER grafana
 
-CMD ["/init/run.sh"]
-
-EXPOSE 3000
+ENTRYPOINT ["/init/run.sh"]
 
 HEALTHCHECK \
   --interval=5s \
@@ -243,3 +87,89 @@ LABEL \
   com.microscaling.license="GNU Lesser General Public License v3.0"
 
 # ---------------------------------------------------------------------------------------
+
+
+#WORKDIR $GOPATH/src/github.com/grafana/grafana
+#
+#COPY Gopkg.toml Gopkg.lock ./
+#COPY vendor vendor
+#
+#ARG DEP_ENSURE=""
+#RUN if [ ! -z "${DEP_ENSURE}" ]; then \
+#      go get -u github.com/golang/dep/cmd/dep && \
+#      dep ensure --vendor-only; \
+#    fi
+#
+#COPY pkg pkg
+#COPY build.go build.go
+#COPY package.json package.json
+#
+#RUN go run build.go build
+#
+## Node build container
+#FROM node:10.14.2
+#
+#WORKDIR /usr/src/app/
+#
+#COPY package.json yarn.lock ./
+#COPY packages packages
+#
+#RUN yarn install --pure-lockfile --no-progress
+#
+#COPY Gruntfile.js tsconfig.json tslint.json ./
+#COPY public public
+#COPY scripts scripts
+#COPY emails emails
+#
+#ENV NODE_ENV production
+#RUN ./node_modules/.bin/grunt build
+#
+## Final container
+#FROM debian:stretch-slim
+#
+#ARG GF_UID="472"
+#ARG GF_GID="472"
+#
+#ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+#    GF_PATHS_CONFIG="/etc/grafana/grafana.ini" \
+#    GF_PATHS_DATA="/var/lib/grafana" \
+#    GF_PATHS_HOME="/usr/share/grafana" \
+#    GF_PATHS_LOGS="/var/log/grafana" \
+#    GF_PATHS_PLUGINS="/var/lib/grafana/plugins" \
+#    GF_PATHS_PROVISIONING="/etc/grafana/provisioning"
+#
+#WORKDIR $GF_PATHS_HOME
+#
+#RUN apt-get update && apt-get upgrade -y && \
+#    apt-get install -qq -y libfontconfig ca-certificates && \
+#    apt-get autoremove -y && \
+#    rm -rf /var/lib/apt/lists/*
+#
+#COPY conf ./conf
+#
+#RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
+#    groupadd -r -g $GF_GID grafana && \
+#    useradd -r -u $GF_UID -g grafana grafana && \
+#    mkdir -p "$GF_PATHS_PROVISIONING/datasources" \
+#             "$GF_PATHS_PROVISIONING/dashboards" \
+#             "$GF_PATHS_PROVISIONING/notifiers" \
+#             "$GF_PATHS_LOGS" \
+#             "$GF_PATHS_PLUGINS" \
+#             "$GF_PATHS_DATA" && \
+#    cp "$GF_PATHS_HOME/conf/sample.ini" "$GF_PATHS_CONFIG" && \
+#    cp "$GF_PATHS_HOME/conf/ldap.toml" /etc/grafana/ldap.toml && \
+#    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && \
+#    chmod 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS"
+#
+#COPY --from=0 /go/src/github.com/grafana/grafana/bin/linux-amd64/grafana-server /go/src/github.com/grafana/grafana/bin/linux-amd64/grafana-cli ./bin/
+#COPY --from=1 /usr/src/app/public ./public
+#COPY --from=1 /usr/src/app/tools ./tools
+#COPY tools/phantomjs/render.js ./tools/phantomjs/render.js
+#
+#EXPOSE 3000
+#
+#COPY ./packaging/docker/run.sh /run.sh
+#
+#USER grafana
+#ENTRYPOINT [ "/run.sh" ]
+#
