@@ -29,12 +29,19 @@ jobs:
         - docker-compose kill
         - docker-compose down
 
-    - stage: build debian and push docker image
+    - stage: push latest docker image
       script:
         - make
         - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
         - docker tag  ${USER}/grafana:latest ${DOCKER_USERNAME}/docker-grafana:latest
         - docker push ${DOCKER_USERNAME}/docker-grafana:latest
-        - docker tag  ${DOCKER_USERNAME}/docker-grafana:latest ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
+        - docker logout
+
+    - stage: push version docker image
+      if: branch = master
+      script:
+        - make
+        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+        - docker tag  ${USER}/grafana:latest ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
         - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
         - docker logout
