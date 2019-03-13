@@ -232,8 +232,8 @@ running_containers=$(docker ps | tail -n +2  | wc -l)
 if [[ ${running_containers} -eq 4 ]] || [[ ${running_containers} -gt 4 ]]
 then
 
-  [[ -f "${API_TOKEN_FILE}" ]] rm -f "${API_TOKEN_FILE}"
-  [[ -f "${RENDER_PNG}" ]] rm -f "${RENDER_PNG}"
+  [[ -f "${API_TOKEN_FILE}" ]] && rm -f "${API_TOKEN_FILE}"
+  [[ -f "${RENDER_PNG}" ]] && rm -f "${RENDER_PNG}"
 
   inspect
 
