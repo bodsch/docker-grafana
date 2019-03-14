@@ -3270,8 +3270,8 @@
         "allValue": null,
         "current": {
           "tags": [],
-          "text": "swm1.das-ist-trivial.de",
-          "value": "swm1.das-ist-trivial.de"
+          "text": "",
+          "value": ""
         },
         "datasource": "Icinga2",
         "definition": "",
@@ -3350,6 +3350,6 @@
   },
   "timezone": "browser",
   "title": "icinga2-influxdb-host",
-  "uid": "8eV9qcuiz",
+  "uid": "icinga2-influxdb-host",
   "version": 1
-} 
+}

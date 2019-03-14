@@ -2391,8 +2391,8 @@
     "list": [
       {
         "current": {
-          "text": "master.icinga2-monitoring.de",
-          "value": "master.icinga2-monitoring.de"
+          "text": "",
+          "value": ""
         },
         "hide": 2,
         "label": null,
@@ -2400,11 +2400,11 @@
         "options": [
           {
             "selected": true,
-            "text": "master.icinga2-monitoring.de",
-            "value": "master.icinga2-monitoring.de"
+            "text": "",
+            "value": ""
           }
         ],
-        "query": "master.icinga2-monitoring.de",
+        "query": "",
         "skipUrlSync": false,
         "type": "constant"
       },
@@ -2476,7 +2476,7 @@
     ]
   },
   "timezone": "",
-  "title": "itl-icinga-influxdb",
-  "uid": "mGtK65Xik",
+  "title": "icinga2-influxdb-itl",
+  "uid": "icinga2-influxdb-itl",
   "version": 2
 }

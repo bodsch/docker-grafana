@@ -64,7 +64,7 @@ RUN \
       zuburqan-parity-report-panel ; \
     do \
        /usr/share/grafana/bin/grafana-cli \
-        --pluginsDir "/usr/share/grafana/data/plugins" \
+        --pluginsDir "/var/lib/grafana/plugins" \
         plugins \
         install ${plugin} ; \
     done && \
