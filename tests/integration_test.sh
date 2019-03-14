@@ -197,7 +197,7 @@ api_request() {
     ${curl_opts} \
     "${parameters[@]}" \
     --output "${RENDER_PNG}" \
-    "https://localhost${URL_PATH}/render/d/qa-test/qa-test?orgId=1&panelId=2&from=now-1m&to=now&theme=light&timeout=10"
+    "https://localhost${URL_PATH}/render/d/qa-test/qa-test?orgId=1&panelId=2&from=now-1m&to=now&theme=light&timeout=5"
 
   if [[ -f "${RENDER_PNG}" ]]
   then

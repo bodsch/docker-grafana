@@ -45,6 +45,29 @@ RUN \
     yajl-tools \
     libfontconfig1 \
     && \
+    # install my favorite grafana plugins
+    echo "install my favorite grafana plugins ..." && \
+    for plugin in \
+      blackmirror1-statusbygroup-panel \
+      btplc-trend-box-panel \
+      digiapulssi-breadcrumb-panel \
+      grafana-clock-panel \
+      grafana-piechart-panel \
+      jdbranham-diagram-panel \
+      michaeldmoore-annunciator-panel \
+      mtanda-histogram-panel \
+      natel-discrete-panel \
+      neocat-cal-heatmap-panel \
+      vonage-status-panel \
+      petrslavotinek-carpetplot-panel \
+      snuids-radar-panel \
+      zuburqan-parity-report-panel ; \
+    do \
+       /usr/share/grafana/bin/grafana-cli \
+        --pluginsDir "/usr/share/grafana/data/plugins" \
+        plugins \
+        install ${plugin} ; \
+    done && \
   apt-get clean && \
   apt autoremove --assume-yes && \
   rm -rf \
