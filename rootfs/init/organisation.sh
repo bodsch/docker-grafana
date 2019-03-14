@@ -5,9 +5,11 @@ update_organisation() {
 
   curl_opts="--silent --user admin:admin"
 
-  data=$(curl ${curl_opts} http://localhost:3000/api/org)
+  data=$(curl \
+    ${curl_opts} \
+    http://localhost:3000/api/org)
 
-  name=$(echo ${data} | jq --raw-output '.name')
+  name=$(echo "${data}" | jq --raw-output '.name')
 
   if [[ "${name}" != "${ORGANISATION}" ]]
   then

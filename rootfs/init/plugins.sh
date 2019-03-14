@@ -21,4 +21,3 @@ update_plugins() {
 
   /usr/share/grafana/bin/grafana-cli --pluginsDir "/usr/share/grafana/data/plugins" plugins upgrade-all 1> /dev/null
 }
-

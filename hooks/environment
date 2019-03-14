@@ -8,5 +8,6 @@ VOLUMES=""
 #  --volume ${DATA_DIR}/log:/var/log \
 #  --volume ${DATA_DIR}/srv:/srv"
 
-ENV=""
+ENV="
+  --env URL_PATH=/grafana"
 #  --env TEST_USER=true"

@@ -16,7 +16,7 @@ ORGANISATION=ACME
 GF_SERVER_ROOT_URL=http://localhost/grafana
 GF_SECURITY_ADMIN_PASSWORD=secret
 
-# URL_PATH=/grafana
+URL_PATH=/grafana
 LOG_LEVEL=info
 ROUTER_LOGGING=false
 

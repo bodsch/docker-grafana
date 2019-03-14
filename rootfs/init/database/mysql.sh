@@ -6,7 +6,7 @@ MYSQL_OPTS="--host=${MYSQL_HOST} --user=${MYSQL_ROOT_USER} --password=${MYSQL_RO
 DATABASE_NAME="grafana"
 
 
-waitForDatabase() {
+wait_for_database() {
 
   RETRY=15
 
@@ -50,7 +50,7 @@ waitForDatabase() {
 }
 
 
-createDatabase() {
+create_database() {
 
   # check if database already created ...
   #
@@ -87,8 +87,8 @@ createDatabase() {
 }
 
 
-waitForDatabase
+wait_for_database
 
-createDatabase
+create_database
 
 # EOF

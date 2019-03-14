@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+#set -x
 set -e
 
 GRAFANA_PORT="${GRAFANA_PORT:-3000}"
@@ -10,6 +10,10 @@ ORGANISATION="Spec Test"
 CURL=$(which curl 2> /dev/null)
 NC=$(which nc 2> /dev/null)
 NC_OPTS="-z"
+
+[[ -e .env ]] && . .env
+
+[[ "${URL_PATH}" = "/" ]] && URL_PATH=
 
 API_TOKEN_FILE="/tmp/grafana.test"
 RENDER_PNG="/tmp/qa-test.png"
@@ -49,7 +53,7 @@ create_token() {
   data=$(curl \
     ${curl_opts} \
     --header "Content-Type: application/json" \
-    https://localhost/grafana/api/auth/keys)
+    https://localhost${URL_PATH}/api/auth/keys)
 
   result=${?}
 
@@ -70,7 +74,7 @@ create_token() {
       --write-out '%{http_code}\n' \
       --output ${API_TOKEN_FILE} \
       --data "{\"name\":\"${api_key}\", \"role\": \"Admin\"}" \
-      https://localhost/grafana/api/auth/keys)
+      https://localhost${URL_PATH}/api/auth/keys)
 
     result=${?}
 
@@ -85,7 +89,7 @@ create_token() {
       echo ${code}
       echo "  token request failed"
 
-      exit 1
+      #exit 1
     fi
 
   fi
@@ -114,7 +118,7 @@ remove_token() {
     "${parameters[@]}" \
     --request DELETE \
     --header "Content-Type: application/json" \
-    https://localhost/grafana/api/auth/keys/1
+    https://localhost${URL_PATH}/api/auth/keys/1
 
   rm -f ${API_TOKEN_FILE}
 
@@ -145,7 +149,7 @@ api_request() {
   data=$(curl \
     ${curl_opts} \
     "${parameters[@]}" \
-    https://localhost/grafana/api/org)
+    https://localhost${URL_PATH}/api/org)
 
   name=$(echo ${data} | jq --raw-output '.name')
 
@@ -158,7 +162,7 @@ api_request() {
     --header 'Content-Type: application/json;charset=UTF-8' \
     --request PUT \
     --data-binary "{\"name\":\"${ORGANISATION}\"}" \
-    https://localhost/grafana/api/org)
+    https://localhost${URL_PATH}/api/org)
 
   if [[ $? -eq 0 ]]
   then
@@ -176,7 +180,7 @@ api_request() {
     --header 'Content-Type: application/json;charset=UTF-8' \
     --request PUT \
     --data-binary "{\"name\":\"${name}\"}" \
-    https://localhost/grafana/api/org)
+    https://localhost${URL_PATH}/api/org)
 
   echo -e "\nnumber of datasources"
   code=$(curl \
@@ -184,7 +188,7 @@ api_request() {
     "${parameters[@]}" \
     --request GET \
     --header 'Content-Type: application/json;charset=UTF-8' \
-    https://localhost/grafana/api/datasources)
+    https://localhost${URL_PATH}/api/datasources)
 
   echo "  $(echo "${code}"  | jq --raw-output '.[].name' | wc -l)"
 
@@ -193,7 +197,7 @@ api_request() {
     ${curl_opts} \
     "${parameters[@]}" \
     --output "${RENDER_PNG}" \
-    "https://localhost/grafana/render/d/qa-test/qa-test?orgId=1&theme=light&timeout=30"
+    "https://localhost${URL_PATH}/render/d/qa-test/qa-test?orgId=1&panelId=2&from=now-1m&to=now&theme=light&timeout=10"
 
   if [[ -f "${RENDER_PNG}" ]]
   then
