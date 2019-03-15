@@ -77,6 +77,11 @@ prepare() {
 
   dba_host=
 
+  for p in HTTP_PROXY HTTPS_PROXY NO_PROXY http_proxy https_proxy no_proxy
+  do
+    unset "${p}"
+  done
+
   if [ ! -f "${HOME}/grafana.ini" ]
   then
     cp ${GRAFANA_CONFIG_FILE} "${HOME}/"
