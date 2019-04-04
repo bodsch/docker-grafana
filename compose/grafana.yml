@@ -23,20 +23,14 @@ services:
     volumes:
       - ${PWD}/import/provisioning:/etc/grafana/provisioning:ro
       - ${PWD}/import/dashboards:/var/lib/grafana/dashboards:ro
-#    volume:
-#      - import/
-#    command: /init/run.sh
-#    entrypoint: ''
     ports:
       - 3000:3000
     links:
       - graphite
       - influxdb
-#      - renderer
     depends_on:
       - graphite
       - influxdb
-#      - renderer
     networks:
       - frontend
       - backend
