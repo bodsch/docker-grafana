@@ -1,47 +1,40 @@
 sudo: required
-
 group: edge
-
 services:
-  - docker
-
+- docker
 env:
   global:
-    - GRAFANA_VERSION=${GRAFANA_VERSION:-5.4.2}
-    - BUILD_DATE=$(date +"%Y-%m-%d")
-    - BUILD_VERSION=$(date +%y%m)
-    - BUILD_TYPE=${BUILD_TYPE:-stable}
-
+  - GRAFANA_VERSION=${GRAFANA_VERSION:-5.4.2}
+  - BUILD_DATE=$(date +"%Y-%m-%d")
+  - BUILD_VERSION=$(date +%y%m)
+  - BUILD_TYPE=${BUILD_TYPE:-stable}
+  - secure: OnPndD7qjF2syDsZBp+G4qftrvuSIqDHYJYe9grkABiQU7WI8WHczSVkMHwz5kDJ3HEDYgWhAv+eTEDo+/1OSX4IcaB5tepqOfetgWvsNXaLDGMsPh3jIZLGa/kYxwghm31Mish0+g2VOcjX8VVw81Z/SS9HmhkyygmPeZA6EHxwKScGdy3KyyX69uWa5gl1Uk0AK7fVm9rQAjveI+2vCTECkBNovWgEBIhVdgAwisV060U+WOma9D3W1AiddMnmZFvlCzJyKvWOc8IoLvRPGbcGyHRJdm1/RMAxDgwOg55ovqbTo5WyZmkGVpaokcoh8sGFiFBrsSLnhb1szQUN1Pu4f3fhjYhmFqBIKfUvY743tR2ZyQQHCKP2aPnI8FuaNC13rkiYRgxQz9kYrfPNaMWGtX8kYn7iYZxeJ/LfP9dtUdlyjgOIX9G+DZb4lqL9vtJX5aZzsXnzmb2/poBPovOABSdqTWfmWMjFfiXTX8XvsqLfXi+l8sFjVdmfOsGaqtBNYAHAeTtdeIEQaYYwr0N+8Mi6G8634Oz3W7kz1ESdVPh7MnqZJHUg2N9kJE7ez5UNk6mSFy6LHeI813FXD8QpnydRns2UfvA0EHXReWMITNftJ7lUBt74L87GyRNm6R9kJrR82N4p768CJiq88+gBMsh9xRyzLkByOtfFKzw=
 jobs:
   include:
-
-    - stage: build
-      script:
-        - make
-
-    - stage: test
-      script:
-        - make compose-file
-        - docker-compose build
-        - docker-compose up -d
-        - sleep 1m
-        - make test
-        - docker-compose kill
-        - docker-compose down
-
-    - stage: push latest docker image
-      script:
-        - make
-        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-        - docker tag  ${USER}/grafana:latest ${DOCKER_USERNAME}/docker-grafana:latest
-        - docker push ${DOCKER_USERNAME}/docker-grafana:latest
-        - docker logout
-
-    - stage: push version docker image
-      if: branch = master
-      script:
-        - make
-        - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
-        - docker tag  ${USER}/grafana:latest ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
-        - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
-        - docker logout
+  - stage: build
+    script:
+    - make
+  - stage: test
+    script:
+    - make compose-file
+    - docker-compose build
+    - docker-compose up -d
+    - sleep 1m
+    - make test
+    - docker-compose kill
+    - docker-compose down
+  - stage: push latest docker image
+    script:
+    - make
+    - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+    - docker tag  ${USER}/grafana:latest ${DOCKER_USERNAME}/docker-grafana:latest
+    - docker push ${DOCKER_USERNAME}/docker-grafana:latest
+    - docker logout
+  - stage: push version docker image
+    if: branch = master
+    script:
+    - make
+    - docker login -u="${DOCKER_USERNAME}" -p="${DOCKER_PASSWORD}"
+    - docker tag  ${USER}/grafana:latest ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
+    - docker push ${DOCKER_USERNAME}/docker-grafana:${GRAFANA_VERSION}
+    - docker logout
