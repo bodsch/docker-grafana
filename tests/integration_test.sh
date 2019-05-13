@@ -98,6 +98,8 @@ create_token() {
 
 remove_token() {
 
+  echo -e "\nremove API token"
+
   curl_opts="--silent --insecure "
 
   HEADERS=( "content-type: application/json;charset=UTF-8" )
