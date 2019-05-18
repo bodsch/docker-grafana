@@ -5,7 +5,7 @@ export DOCKER_VERSION    ?= latest
 export BUILD_DATE        := $(shell date +%Y-%m-%d)
 export BUILD_VERSION     := $(shell date +%y%m)
 export BUILD_TYPE        ?= stable
-export GRAFANA_VERSION   ?= 6.1.6
+export GRAFANA_VERSION   ?= 6.2.0-beta2
 
 
 .PHONY: build shell run exec start stop clean
