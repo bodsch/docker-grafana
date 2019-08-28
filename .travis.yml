@@ -4,7 +4,7 @@ services:
 - docker
 env:
   global:
-  - GRAFANA_VERSION=${GRAFANA_VERSION:-5.4.2}
+  - GRAFANA_VERSION=${GRAFANA_VERSION:-6.3.3}
   - BUILD_DATE=$(date +"%Y-%m-%d")
   - BUILD_VERSION=$(date +%y%m)
   - BUILD_TYPE=${BUILD_TYPE:-stable}
